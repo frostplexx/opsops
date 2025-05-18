@@ -14,7 +14,7 @@ OpSOPS simplifies the process of encrypting, decrypting, and managing secrets by
 
 # Or using homebrew
 brew tap frostplexx/tap
-brew install lazykeys
+brew install opsops
 ```
 
 ## Prerequisites
