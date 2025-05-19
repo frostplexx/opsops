@@ -380,7 +380,7 @@ jobs:
           fi
       
           # Update the cargo hash if provided
-          apt install -y jq
+          sudo apt-get install jq -y
           CARGO_HASH=$(nix-shell -p nix-prefetch-git jq --run "nix hash to-sri sha256:\$(nix-prefetch-git --url https://github.com/frostplexx/opsops --quiet --rev \"${VERSION}\" | jq -r '.sha256')")
           sed -i "s|cargoHash = \".*\";|cargoHash = \"${CARGO_HASH}\";|" "$NIX_MODULE_PATH"
       
