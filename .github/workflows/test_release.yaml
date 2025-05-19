@@ -373,8 +373,6 @@ jobs:
           # Update the version line
           sed -i "s|version = \".*\";|version = \"${VERSION_STRIPPED}\";|" "$NIX_MODULE_PATH"
       
-          # Update the Git revision
-          sed -i "s|rev = \".*\";|rev = \"${VERSION}\";|" "$NIX_MODULE_PATH"
       
           # Update the src hash if provided
           if [ -n "${SRC_HASH:-}" ]; then
@@ -382,9 +380,9 @@ jobs:
           fi
       
           # Update the cargo hash if provided
-          if [ -n "${CARGO_HASH:-}" ]; then
-            sed -i "s|cargoHash = \".*\";|cargoHash = \"${CARGO_HASH}\";|" "$NIX_MODULE_PATH"
-          fi
+          apt install -y jq
+          CARGO_HASH=$(nix-shell -p nix-prefetch-git jq --run "nix hash to-sri sha256:\$(nix-prefetch-git --url https://github.com/frostplexx/opsops --quiet --rev \"${VERSION}\" | jq -r '.sha256')")
+          sed -i "s|cargoHash = \".*\";|cargoHash = \"${CARGO_HASH}\";|" "$NIX_MODULE_PATH"
       
           # Commit and push changes if any
           git add "$NIX_MODULE_PATH"
