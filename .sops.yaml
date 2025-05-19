@@ -1,12 +1,19 @@
-keys:
-  - &key age1207u8skz74quhs0xtunrrp2xwj0dtmffllfk7fw93q5eywd7w37qslc9yh
-  - &server age1cdr7yexx2vc54q46tkmzw0udh2hynm4dvytjnvzapc64x6rsh59qmemc6g
 creation_rules:
-  - path_regex: .*\.(yaml|yml|json|env|ini|sops|txt)$
-    key_groups:
-      - age:
-          - *key
-          - *server
-  - path_regex: .*\.(yaml|yml|json|env|ini|sops|txt)$
-    age: age1kula8luezle3jds5mergwvtpmyu5s6tqnt3dzfxeuukuacq9xeds8lvfe7
+- path_regex: .*\.(yaml|yml|json|env|ini|sops|txt)$
+  age: null
+  key_groups:
+  - age:
+    - age1207u8skz74quhs0xtunrrp2xwj0dtmffllfk7fw93q5eywd7w37qslc9yh
+    - age1cdr7yexx2vc54q46tkmzw0udh2hynm4dvytjnvzapc64x6rsh59qmemc6g
+- path_regex: .*\.(yaml|yml|json|env|ini|sops|txt)$
+  age: age1kula8luezle3jds5mergwvtpmyu5s6tqnt3dzfxeuukuacq9xeds8lvfe7
+  key_groups: []
+- path_regex: example.yaml
+  age: age1kula8luezle3jds5mergwvtpmyu5s6tqnt3dzfxeuukuacq9xeds8lvfe7
+  encrypted_regex: ^(secrets|privateKey|token|key|crt|cert|password|secret|kubeconfig|talosconfig)
+  key_groups: []
+- path_regex: ./src/example.yaml
+  age: age1kula8luezle3jds5mergwvtpmyu5s6tqnt3dzfxeuukuacq9xeds8lvfe7
+  encrypted_regex: ^(data|stringData|password|token|secret|key|cert|ca.crt|tls|ingress|backupTarget)
+  key_groups: []
 onepassworditem: op://Personal/test/Private Key

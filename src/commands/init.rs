@@ -51,6 +51,7 @@ pub fn init() {
                     creation_rules: vec![CreationRule {
                         path_regex: Some(".*".to_string()),
                         age: None,
+                        encrypted_regex: None,
                         key_groups: Vec::new(),
                     }],
                     onepassworditem: String::new(),

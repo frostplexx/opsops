@@ -1,6 +1,10 @@
 use crate::util::sops_config::read_or_create_config;
+use age::{
+    secrecy::{ExposeSecret, ExposeSecretMut, SecretString},
+    x25519::{Identity, Recipient},
+};
 use colored::Colorize;
-use std::process::Command;
+use std::{process::Command, str::FromStr};
 
 /// Retrieves the Age key from 1Password using the reference stored in .sops.yaml
 /// Returns the key as a string if successful, or an error message if not
@@ -50,4 +54,23 @@ pub fn get_age_key_from_1password() -> Result<String, String> {
     }
 
     Ok(key)
+}
+
+// Extract the public key from the age private key
+pub fn extract_public_key(private_key: &str) -> Result<String, &'static str> {
+    // Parse the private key into an Identity
+    let secret_key = SecretString::from(private_key);
+    let identity = match Identity::from_str(secret_key.expose_secret()) {
+        Ok(id) => id,
+        Err(err) => {
+            eprintln!("{} {}", "❌ Invalid private key format:".red(), err);
+            return Err(err);
+        }
+    };
+
+    // Derive the public key from the private key
+    let recipient = identity.to_public();
+    let derived_public_key = recipient.to_string();
+
+    Ok(derived_public_key)
 }

@@ -11,6 +11,8 @@ pub struct SopsConfig {
 pub struct CreationRule {
     pub path_regex: Option<String>,
     pub age: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub encrypted_regex: Option<String>,
     #[serde(default)]
     pub key_groups: Vec<KeyGroup>,
 }

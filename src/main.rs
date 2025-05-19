@@ -54,6 +54,16 @@ enum Commands {
     /// Initialize opsops
     Init {},
 
+    /// Set up encryption patterns for a file
+    #[command(arg_required_else_help = true)]
+    TargetKeys {
+        #[arg(
+            value_name = "PATH",
+            help = "Path to the file to configure encryption for"
+        )]
+        path: OsString,
+    },
+
     /// Generate shell completions and man pages
     #[command(arg_required_else_help = false, hide = true)]
     GenerateDocs {
@@ -120,6 +130,7 @@ fn main() -> io::Result<()> {
         Commands::Decrypt { path } => commands::decrypt::decrypt(path),
         Commands::Init {} => commands::init::init(),
         Commands::Doctor {} => commands::doctor::doctor(),
+        Commands::TargetKeys { path } => commands::set_key::set_keys(path),
         Commands::GenerateDocs { dir } => Cli::generate_docs(&dir)?,
     }
 

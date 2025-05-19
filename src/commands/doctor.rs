@@ -1,10 +1,8 @@
-use crate::util::{op_key::get_age_key_from_1password, sops_config::read_or_create_config};
-use age::{
-    secrecy::{ExposeSecret, ExposeSecretMut, SecretString},
-    x25519::{Identity, Recipient},
+use crate::util::{
+    op_key::{extract_public_key, get_age_key_from_1password},
+    sops_config::read_or_create_config,
 };
 use colored::Colorize;
-use std::str::FromStr;
 
 pub fn doctor() {
     let config = match read_or_create_config() {
@@ -45,18 +43,13 @@ pub fn doctor() {
     print!("{} {}\n", "✅ Got private key:".green(), hiddenkey);
 
     // Parse the private key into an Identity
-    let secret_key = SecretString::from(age);
-    let identity = match Identity::from_str(secret_key.expose_secret()) {
-        Ok(id) => id,
+    let derived_public_key = match extract_public_key(&age) {
+        Ok(k) => k,
         Err(err) => {
-            eprintln!("{} {}", "❌ Invalid private key format:".red(), err);
+            eprint!("{}{}", "❌ Error getting public key: \n".red(), err);
             return;
         }
     };
-
-    // Derive the public key from the private key
-    let recipient = identity.to_public();
-    let derived_public_key = recipient.to_string();
 
     // Get public keys from config
     let mut found = false;
@@ -77,7 +70,6 @@ pub fn doctor() {
         }
 
         // Check key groups
-        let mut has_key_in_groups = false;
         for key_group in &rule.key_groups {
             if !key_group.age.is_empty() {
                 rule_has_keys = true;
