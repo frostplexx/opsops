@@ -3,7 +3,6 @@ use crate::util::sops_command::SopsCommandBuilder;
 use crate::util::sops_status::is_file_unchanged_status;
 use colored::Colorize;
 use std::ffi::OsString;
-use std::fmt::format;
 use std::path::Path;
 
 /// Decrypts a file using SOPS with the Age key from 1Password
