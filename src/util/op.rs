@@ -1,6 +1,8 @@
 use serde::Deserialize;
 use std::process::Command;
 
+use super::print_status::print_error;
+
 #[derive(Debug, Deserialize)]
 pub struct ItemField {
     label: String,
@@ -111,7 +113,7 @@ pub fn op_item_create(item: OpItem) {
     let status = cmd.status().expect("failed to run `op` command");
 
     if !status.success() {
-        eprintln!("Failed to create item in 1Password");
+        print_error(format!("Failed to create item in 1Password"));
     }
 }
 
@@ -128,7 +130,10 @@ pub fn op_item_get(item_name: &str, field: &str) -> Option<String> {
     if output.status.success() {
         Some(String::from_utf8_lossy(&output.stdout).trim().to_string())
     } else {
-        eprintln!("Error: {}", String::from_utf8_lossy(&output.stderr));
+        print_error(format!(
+            "Error: {}",
+            String::from_utf8_lossy(&output.stderr)
+        ));
         None
     }
 }
@@ -147,7 +152,7 @@ pub fn get_vaults() -> Option<Vec<String>> {
         let vaults: Vec<Vault> = match serde_json::from_slice(&output_json.stdout) {
             Ok(v) => v,
             Err(e) => {
-                eprintln!("Failed to parse JSON: {}", e);
+                print_error(format!("Failed to parse JSON: {}", e));
                 return None;
             }
         };
@@ -156,7 +161,10 @@ pub fn get_vaults() -> Option<Vec<String>> {
         let vault_names: Vec<String> = vaults.into_iter().map(|vault| vault.name).collect();
         Some(vault_names)
     } else {
-        eprintln!("Error: {}", String::from_utf8_lossy(&output_json.stderr));
+        print_error(format!(
+            "Error: {}",
+            String::from_utf8_lossy(&output_json.stderr)
+        ));
         None
     }
 }
@@ -177,7 +185,7 @@ pub fn get_items(vault: &String) -> Option<Vec<String>> {
         let vaults: Vec<ListItem> = match serde_json::from_slice(&output_json.stdout) {
             Ok(v) => v,
             Err(e) => {
-                eprintln!("Failed to parse JSON: {}", e);
+                print_error(format!("Failed to parse JSON: {}", e));
                 return None;
             }
         };
@@ -186,7 +194,10 @@ pub fn get_items(vault: &String) -> Option<Vec<String>> {
         let item_names: Vec<String> = vaults.into_iter().map(|item| item.title).collect();
         Some(item_names)
     } else {
-        eprintln!("Error: {}", String::from_utf8_lossy(&output_json.stderr));
+        print_error(format!(
+            "Error: {}",
+            String::from_utf8_lossy(&output_json.stderr)
+        ));
         None
     }
 }
@@ -208,7 +219,7 @@ pub fn get_fields(item: &String, vault: &String) -> Option<Vec<String>> {
         let fields: ItemFields = match serde_json::from_slice(&output_json.stdout) {
             Ok(v) => v,
             Err(e) => {
-                eprintln!("Failed to parse JSON: {}", e);
+                print_error(format!("Failed to parse JSON: {}", e));
                 return None;
             }
         };
@@ -217,7 +228,10 @@ pub fn get_fields(item: &String, vault: &String) -> Option<Vec<String>> {
         let item_names: Vec<String> = fields.fields.into_iter().map(|item| item.label).collect();
         Some(item_names)
     } else {
-        eprintln!("Error: {}", String::from_utf8_lossy(&output_json.stderr));
+        print_error(format!(
+            "Error: {}",
+            String::from_utf8_lossy(&output_json.stderr)
+        ));
         None
     }
 }

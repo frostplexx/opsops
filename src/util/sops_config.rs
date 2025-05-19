@@ -3,7 +3,10 @@ use std::{
     io::{Read, Write},
 };
 
-use super::sops_structs::{CreationRule, SopsConfig};
+use super::{
+    print_status::print_error,
+    sops_structs::{CreationRule, SopsConfig},
+};
 use crate::util;
 use colored::Colorize;
 use serde::Deserialize;
@@ -20,19 +23,22 @@ pub fn get_sops_config() -> Option<File> {
             match File::open(&config_path) {
                 Ok(file) => return Some(file),
                 Err(e) => {
-                    eprintln!("Failed to open {}: {}", config_path.display(), e);
+                    print_error(format!("Failed to open {}: {}", config_path.display(), e));
                     return None;
                 }
             }
         } else {
-            eprintln!(
+            print_error(format!(
                 "{} {}",
                 "Config file not found:".red().bold(),
                 config_path.display()
-            );
+            ));
         }
     } else {
-        eprintln!("{}", "Could not determine project root.".red().bold());
+        print_error(format!(
+            "{}",
+            "Could not determine project root.".red().bold()
+        ));
     }
 
     None

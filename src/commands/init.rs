@@ -1,4 +1,5 @@
 use crate::util::op::{get_fields, get_items, get_vaults};
+use crate::util::print_status::{print_error, print_info, print_success, print_warning};
 use crate::util::sops_config::{get_sops_config, read_or_create_config, write_config};
 use crate::util::sops_structs::{CreationRule, SopsConfig};
 use colored::Colorize;
@@ -12,16 +13,16 @@ pub fn init() {
         Some(mut file) => {
             let mut contents = String::new();
             if let Err(e) = file.read_to_string(&mut contents) {
-                eprintln!("{} {}", "❌ Failed to read config file:".red(), e);
+                print_error(format!("{} {}", "Failed to read config file:".red(), e));
                 return;
             }
 
             // Check if onepassworditem field is missing
             if !contents.contains("onepassworditem") {
-                println!(
+                print_warning(format!(
                     "{}",
                     "⚠️  .sops.yaml exists but is missing onepassworditem field.".yellow()
-                );
+                ));
                 assign_op_item();
                 return;
             }
@@ -29,16 +30,19 @@ pub fn init() {
             let config: SopsConfig = match from_str(&contents) {
                 Ok(c) => c,
                 Err(e) => {
-                    eprintln!("{} {}", "❌ Failed to parse YAML:".red(), e);
+                    print_error(format!("{} {}", "Failed to parse YAML:".red(), e));
                     return;
                 }
             };
 
             // Config file exists with onepassworditem field, do nothing
-            println!("{}", "✅ .sops.yaml file exists. No action needed.".green());
+            print_success(format!(
+                "{}",
+                ".sops.yaml file exists. No action needed.".green()
+            ));
         }
         None => {
-            println!("{}", "❌ .sops.yaml is missing.".red());
+            print_error(format!("{}", ".sops.yaml is missing.".red()));
 
             if Confirm::with_theme(&ColorfulTheme::default())
                 .with_prompt("Would you like to create a basic .sops.yaml file?")
@@ -51,20 +55,21 @@ pub fn init() {
                     creation_rules: vec![CreationRule {
                         path_regex: Some(".*".to_string()),
                         age: None,
+                        encrypted_regex: None,
                         key_groups: Vec::new(),
                     }],
                     onepassworditem: String::new(),
                 };
 
                 if let Err(e) = write_config(&config) {
-                    eprintln!("{} {}", "❌ Failed to create config file:".red(), e);
+                    print_error(format!("{} {}", "Failed to create config file:".red(), e));
                     return;
                 }
 
-                println!("{}", "✅ Created basic .sops.yaml file.".green());
+                print_success(format!("{}", "Created basic .sops.yaml file.".green()));
                 assign_op_item();
             } else {
-                println!("{}", "Please create a .sops.yaml file manually following the guide at: https://github.com/getsops/sops#using-sops-yaml-conf-to-select-kms-pgp-and-age-for-new-files".yellow());
+                print_info(format!("{}", "Please create a .sops.yaml file manually following the guide at: https://github.com/getsops/sops#using-sops-yaml-conf-to-select-kms-pgp-and-age-for-new-files".yellow()));
             }
         }
     }
@@ -81,13 +86,13 @@ fn assign_op_item() {
         let vaults = match get_vaults() {
             Some(vaults) => vaults,
             None => {
-                eprintln!("❌ Failed to retrieve vaults.");
+                print_error(format!("Failed to retrieve vaults."));
                 return;
             }
         };
         // If no vaults are found, exit
         if vaults.is_empty() {
-            eprintln!("❌ No vaults found.");
+            print_error(format!("No vaults found."));
             return;
         }
         // Let the user select a vault
@@ -99,13 +104,13 @@ fn assign_op_item() {
         let items = match get_items(&vaults[selected_vault]) {
             Some(vaults) => vaults,
             None => {
-                eprintln!("❌ Failed to retrieve items.");
+                print_error(format!("Failed to retrieve items."));
                 return;
             }
         };
         // If no vaults are found, exit
         if items.is_empty() {
-            eprintln!("❌ No items found.");
+            print_error(format!("No items found."));
             return;
         }
         // Prompt for the 1Password item name
@@ -117,13 +122,13 @@ fn assign_op_item() {
         let fields = match get_fields(&items[selected_item], &vaults[selected_vault]) {
             Some(vaults) => vaults,
             None => {
-                eprintln!("❌ Failed to retrieve items.");
+                print_error(format!("Failed to retrieve items."));
                 return;
             }
         };
         // If no vaults are found, exit
         if fields.is_empty() {
-            eprintln!("❌ No items found.");
+            print_error(format!("No items found."));
             return;
         }
         // Prompt for the 1Password item name
@@ -137,13 +142,16 @@ fn assign_op_item() {
             "op://{}/{}/{}",
             vaults[selected_vault], items[selected_item], fields[selected_field]
         );
-        println!("🔐 Writing 1Password reference to config: {}", reference);
+        print_info(format!(
+            "🔐 Writing 1Password reference to config: {}",
+            reference
+        ));
 
         // Read the existing config
         let mut config = match read_or_create_config() {
             Ok(cfg) => cfg,
             Err(e) => {
-                eprintln!("❌ Failed to read or create config: {}", e);
+                print_error(format!("Failed to read or create config: {}", e));
                 return;
             }
         };
@@ -153,13 +161,13 @@ fn assign_op_item() {
 
         // Write the updated config back to disk
         if let Err(e) = write_config(&config) {
-            eprintln!("❌ Failed to write config: {}", e);
+            print_error(format!("Failed to write config: {}", e));
             return;
         }
 
-        println!(
+        print_success(format!(
             "{}",
-            "✅ Successfully updated .sops.yaml with 1Password reference.".green()
-        );
+            "Successfully updated .sops.yaml with 1Password reference.".green()
+        ));
     }
 }

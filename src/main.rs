@@ -7,6 +7,7 @@ use std::ffi::OsString;
 use std::fs;
 use std::io;
 use std::path::Path;
+use util::print_status::print_info;
 
 #[derive(Debug, Parser)]
 #[command(name = "opsops")]
@@ -54,6 +55,16 @@ enum Commands {
     /// Initialize opsops
     Init {},
 
+    /// Set up encryption patterns for a file
+    #[command(arg_required_else_help = true)]
+    TargetKeys {
+        #[arg(
+            value_name = "PATH",
+            help = "Path to the file to configure encryption for"
+        )]
+        path: OsString,
+    },
+
     /// Generate shell completions and man pages
     #[command(arg_required_else_help = false, hide = true)]
     GenerateDocs {
@@ -90,7 +101,7 @@ impl Cli {
         // Generate Fish completions
         let mut cmd = Cli::command();
         let path = generate_to(Fish, &mut cmd, "opsops", &completion_dir)?;
-        println!("Generated Fish completions at: {}", path.display());
+        print_info(format!("Generated Fish completions at: {}", path.display()));
 
         println!("\nTo install:");
         println!("  Man pages:          mkdir -p ~/.local/share/man/man1");
@@ -120,6 +131,7 @@ fn main() -> io::Result<()> {
         Commands::Decrypt { path } => commands::decrypt::decrypt(path),
         Commands::Init {} => commands::init::init(),
         Commands::Doctor {} => commands::doctor::doctor(),
+        Commands::TargetKeys { path } => commands::set_key::set_keys(path),
         Commands::GenerateDocs { dir } => Cli::generate_docs(&dir)?,
     }
 

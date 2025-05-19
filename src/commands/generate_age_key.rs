@@ -2,7 +2,10 @@ use age::{secrecy::ExposeSecret, x25519};
 use colored::Colorize;
 use dialoguer::{Confirm, Input, theme::ColorfulTheme};
 
-use crate::util::op::{OpCategory, OpItem, OpItemField, op_item_create};
+use crate::util::{
+    op::{OpCategory, OpItem, OpItemField, op_item_create},
+    print_status::print_info,
+};
 
 pub fn generate_age_key() {
     let key = x25519::Identity::generate();
@@ -43,6 +46,11 @@ pub fn generate_age_key() {
             "Remember to save this key in a secure location!".dimmed()
         );
     }
+
+    print_info(format!(
+        "{}",
+        "Don't forget to add the public key to .sops.yaml!".bold(),
+    ));
 }
 
 fn save_to_op(key: &x25519::Identity, item_name: String) {
