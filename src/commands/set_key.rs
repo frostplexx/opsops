@@ -1,11 +1,9 @@
 use crate::util::op_key::extract_public_key;
 use crate::util::{op_key, sops_config};
-use clap::Error;
 use colored::Colorize;
 use dialoguer::{Select, theme::ColorfulTheme};
-use std::fs;
 use std::path::Path;
-use std::{ffi::OsString, str::FromStr};
+use std::ffi::OsString;
 
 // Set encryption patterns for a file in .sops.yaml
 pub fn set_keys(path: OsString) {

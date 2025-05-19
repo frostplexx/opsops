@@ -1,7 +1,7 @@
 use crate::util::sops_config::read_or_create_config;
 use age::{
-    secrecy::{ExposeSecret, ExposeSecretMut, SecretString},
-    x25519::{Identity, Recipient},
+    secrecy::{ExposeSecret, SecretString},
+    x25519::Identity,
 };
 use colored::Colorize;
 use std::{process::Command, str::FromStr};
