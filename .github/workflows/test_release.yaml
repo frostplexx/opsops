@@ -292,14 +292,14 @@ jobs:
       - name: Update Homebrew Formula
         run: |
           FORMULA_PATH=/tmp/homebrew-tap/Formula/opsops.rb
-          # Configure Git for the remote repository
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
           # Clone the Homebrew Tap repository
           git clone https://github.com/frostplexx/homebrew-tap.git /tmp/homebrew-tap
           
           # Navigate into the repository
           cd /tmp/homebrew-tap
+          # Configure Git for the remote repository
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           
           # Fetch the latest changes to ensure we have the most up-to-date branch
           git fetch origin main
