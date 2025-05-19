@@ -135,6 +135,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
+  
+      - name: Extract version from Cargo.toml
+        id: extract_version
+        run: |
+          VERSION=$(grep -m1 '^version =' Cargo.toml | sed -E 's/version = "(.*)"/\1/')
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - name: Prepare release binaries
         run: |
@@ -302,7 +308,7 @@ jobs:
           git checkout main
           
           # Update version in the formula
-          sed -i '' "s|^  version \".*\"|  version \"${VERSION#v}\"|" $FORMULA_PATH
+          sed -i "s|^  version \".*\"|  version \"${VERSION#v}\"|" $FORMULA_PATH
           
           # Update ARM64 URL and SHA256
           if [ -n "${{ env.ARM64_SHA256 }}" ]; then
