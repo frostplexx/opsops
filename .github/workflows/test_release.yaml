@@ -130,7 +130,6 @@ jobs:
       - uses: cachix/install-nix-action@v31
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-      - run: nix-build
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -377,17 +376,14 @@ jobs:
       
           # Update the version line
           sed -i "s|version = \".*\";|version = \"${VERSION_STRIPPED}\";|" "$NIX_MODULE_PATH"
-      
-      
-          # Update the src hash if provided
-          if [ -n "${SRC_HASH:-}" ]; then
-            sed -i "s|sha256 = \".*\";|sha256 = \"${SRC_HASH}\";|" "$NIX_MODULE_PATH"
-          fi
-      
+
           # Update the cargo hash if provided
           sudo apt-get install jq -y
-          CARGO_HASH=$(nix-shell -p nix-prefetch-git jq --run "nix hash to-sri sha256:\$(nix-prefetch-git --url https://github.com/frostplexx/opsops --quiet --rev \"${VERSION}\" | jq -r '.sha256')")
-          sed -i "s|cargoHash = \".*\";|cargoHash = \"${CARGO_HASH}\";|" "$NIX_MODULE_PATH"
+      
+          # Update the src hash if provided
+          SRC_HASH=$(nix-shell -p nix-prefetch-git jq --run "nix hash to-sri sha256:\$(nix-prefetch-git --url https://github.com/frostplexx/opsops --quiet --rev v\"${VERSION}\" | jq -r '.sha256')")
+          sed -i "s|sha256 = \".*\";|sha256 = \"${SRC_HASH}\";|" "$NIX_MODULE_PATH"
+    
       
           # Commit and push changes if any
           git add "$NIX_MODULE_PATH"
