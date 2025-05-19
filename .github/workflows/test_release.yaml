@@ -389,7 +389,7 @@ jobs:
           # Commit and push changes if any
           git add "$NIX_MODULE_PATH"
           git config --global credential.helper store
-          echo "https://x-access-token:${{ secrets.NIXKIT_TOKEN }}@github.com" > ~/.git-credentials
+          echo "https://x-access-token:${{ secrets.RELEASE_TOKEN }}@github.com" > ~/.git-credentials
       
           if ! git diff --cached --quiet; then
             git commit -m "Update opsops module for version $VERSION"
