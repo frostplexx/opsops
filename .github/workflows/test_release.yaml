@@ -344,52 +344,55 @@ jobs:
 
       - name: Update NixKit Module
         run: |
+          set -euo pipefail
+      
           NIXKIT_PATH=/tmp/nixkit
           NIX_MODULE_PATH=$NIXKIT_PATH/modules/shared/opsops/default.nix
-          
-          
+      
           # Clone the NixKit repository
           git clone https://github.com/frostplexx/nixkit.git $NIXKIT_PATH
-          
+      
           # Navigate into the repository
           cd $NIXKIT_PATH
-
-          # Configure Git for the remote repository
+      
+          # Configure Git
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
-          # Fetch the latest changes to ensure we have the most up-to-date branch
           git fetch origin main
-          
-          # Checkout to the main branch
           git checkout main
-          
-          # Update the version
-          sed -i '' "s|version = \".*\";|version = \"${VERSION#v}\";|" $NIX_MODULE_PATH
-          
-          # Update the Git revision (removing the 'v' prefix if present)
-          sed -i '' "s|rev = \"v\${version}\";|rev = \"${{ env.VERSION }}\";|" $NIX_MODULE_PATH
-          
-          # Update the src hash
-          if [ -n "${{ env.SRC_HASH }}" ]; then
-            sed -i '' "s|sha256 = \"sha256-.*\";|sha256 = \"${{ env.SRC_HASH }}\";|" $NIX_MODULE_PATH
+      
+          # Ensure the target file exists before modifying
+          if [ ! -f "$NIX_MODULE_PATH" ]; then
+            echo "ERROR: $NIX_MODULE_PATH not found!"
+            exit 1
           fi
-          
-          # Update the cargoHash
-          if [ -n "${{ env.CARGO_HASH }}" ]; then
-            sed -i '' "s|cargoHash = \"sha256-.*\";|cargoHash = \"${{ env.CARGO_HASH }}\";|" $NIX_MODULE_PATH
+      
+          # Strip 'v' prefix from VERSION
+          VERSION_STRIPPED="${VERSION#v}"
+      
+          # Update the version line
+          sed -i "s|version = \".*\";|version = \"${VERSION_STRIPPED}\";|" "$NIX_MODULE_PATH"
+      
+          # Update the Git revision
+          sed -i "s|rev = \".*\";|rev = \"${VERSION}\";|" "$NIX_MODULE_PATH"
+      
+          # Update the src hash if provided
+          if [ -n "${SRC_HASH:-}" ]; then
+            sed -i "s|sha256 = \".*\";|sha256 = \"${SRC_HASH}\";|" "$NIX_MODULE_PATH"
           fi
-          
-          # Stage the changes
-          git add $NIX_MODULE_PATH
+      
+          # Update the cargo hash if provided
+          if [ -n "${CARGO_HASH:-}" ]; then
+            sed -i "s|cargoHash = \".*\";|cargoHash = \"${CARGO_HASH}\";|" "$NIX_MODULE_PATH"
+          fi
+      
+          # Commit and push changes if any
+          git add "$NIX_MODULE_PATH"
           git config --global credential.helper store
           echo "https://x-access-token:${{ secrets.NIXKIT_TOKEN }}@github.com" > ~/.git-credentials
-          
-          # Only commit and push if there are changes
+      
           if ! git diff --cached --quiet; then
-            git commit -m "Update opsops module for version ${{ env.VERSION }}"
-            
-            # Push using the token for authentication
+            git commit -m "Update opsops module for version $VERSION"
             git push https://github.com/frostplexx/nixkit.git HEAD:main
           else
             echo "No changes to commit."
