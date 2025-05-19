@@ -282,3 +282,111 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           semantic-release
+
+      - name: Update Homebrew Formula
+        run: |
+          FORMULA_PATH=/tmp/homebrew-tap/Formula/opsops.rb
+          # Configure Git for the remote repository
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          # Clone the Homebrew Tap repository
+          git clone https://github.com/frostplexx/homebrew-tap.git /tmp/homebrew-tap
+          
+          # Navigate into the repository
+          cd /tmp/homebrew-tap
+          
+          # Fetch the latest changes to ensure we have the most up-to-date branch
+          git fetch origin main
+          
+          # Checkout to the main branch
+          git checkout main
+          
+          # Update version in the formula
+          sed -i '' "s|^  version \".*\"|  version \"${VERSION#v}\"|" $FORMULA_PATH
+          
+          # Update ARM64 URL and SHA256
+          if [ -n "${{ env.ARM64_SHA256 }}" ]; then
+            ARM64_URL="https://github.com/${{ github.repository }}/releases/download/${{ env.VERSION }}/opsops-macos-aarch64"
+            sed -i '' "/Hardware::CPU.arm/,/sha256/ s|url \".*\"|url \"$ARM64_URL\"|" $FORMULA_PATH
+            sed -i '' "/Hardware::CPU.arm/,/sha256/ s|sha256 \".*\"|sha256 \"${{ env.ARM64_SHA256 }}\"|" $FORMULA_PATH
+          fi
+          
+          # Update x86_64 URL and SHA256
+          if [ -n "${{ env.X86_64_SHA256 }}" ]; then
+            X86_64_URL="https://github.com/${{ github.repository }}/releases/download/${{ env.VERSION }}/opsops-macos-x86_64"
+            sed -i '' "/Hardware::CPU.intel/,/sha256/ s|url \".*\"|url \"$X86_64_URL\"|" $FORMULA_PATH
+            sed -i '' "/Hardware::CPU.intel/,/sha256/ s|sha256 \".*\"|sha256 \"${{ env.X86_64_SHA256 }}\"|" $FORMULA_PATH
+          fi
+          
+          # Stage the changes
+          git add $FORMULA_PATH
+          git config --global credential.helper store
+          echo "https://x-access-token:${{ secrets.RELEASE_TOKEN }}@github.com" > ~/.git-credentials
+          
+          # Only commit and push if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "Update formula for version ${{ env.VERSION }}"
+            
+            # Push using the token for authentication
+            git push https://github.com/frostplexx/homebrew-tap.git HEAD:main
+          else
+            echo "No changes to commit."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ env.VERSION }}
+
+      - name: Update NixKit Module
+        run: |
+          NIXKIT_PATH=/tmp/nixkit
+          NIX_MODULE_PATH=$NIXKIT_PATH/modules/shared/opsops/default.nix
+          
+          # Configure Git for the remote repository
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Clone the NixKit repository
+          git clone https://github.com/frostplexx/nixkit.git $NIXKIT_PATH
+          
+          # Navigate into the repository
+          cd $NIXKIT_PATH
+          
+          # Fetch the latest changes to ensure we have the most up-to-date branch
+          git fetch origin main
+          
+          # Checkout to the main branch
+          git checkout main
+          
+          # Update the version
+          sed -i '' "s|version = \".*\";|version = \"${VERSION#v}\";|" $NIX_MODULE_PATH
+          
+          # Update the Git revision (removing the 'v' prefix if present)
+          sed -i '' "s|rev = \"v\${version}\";|rev = \"${{ env.VERSION }}\";|" $NIX_MODULE_PATH
+          
+          # Update the src hash
+          if [ -n "${{ env.SRC_HASH }}" ]; then
+            sed -i '' "s|sha256 = \"sha256-.*\";|sha256 = \"${{ env.SRC_HASH }}\";|" $NIX_MODULE_PATH
+          fi
+          
+          # Update the cargoHash
+          if [ -n "${{ env.CARGO_HASH }}" ]; then
+            sed -i '' "s|cargoHash = \"sha256-.*\";|cargoHash = \"${{ env.CARGO_HASH }}\";|" $NIX_MODULE_PATH
+          fi
+          
+          # Stage the changes
+          git add $NIX_MODULE_PATH
+          git config --global credential.helper store
+          echo "https://x-access-token:${{ secrets.NIXKIT_TOKEN }}@github.com" > ~/.git-credentials
+          
+          # Only commit and push if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "Update opsops module for version ${{ env.VERSION }}"
+            
+            # Push using the token for authentication
+            git push https://github.com/frostplexx/nixkit.git HEAD:main
+          else
+            echo "No changes to commit."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ env.VERSION }}
