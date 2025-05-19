@@ -1,9 +1,10 @@
 use crate::util::op_key::extract_public_key;
+use crate::util::print_status::{print_error, print_success};
 use crate::util::{op_key, sops_config};
 use colored::Colorize;
 use dialoguer::{Select, theme::ColorfulTheme};
-use std::path::Path;
 use std::ffi::OsString;
+use std::path::Path;
 
 // Set encryption patterns for a file in .sops.yaml
 pub fn set_keys(path: OsString) {
@@ -12,7 +13,11 @@ pub fn set_keys(path: OsString) {
 
     // Check if the file exists
     if !file_path.exists() {
-        eprintln!("{} {}", "Error:".red().bold(), "File not found.".red());
+        print_error(format!(
+            "{} {}",
+            "Error:".red().bold(),
+            "File not found.".red()
+        ));
         return;
     }
 
@@ -20,19 +25,19 @@ pub fn set_keys(path: OsString) {
     if let Some(ext) = file_path.extension() {
         let ext_str = ext.to_string_lossy().to_lowercase();
         if !["yaml", "yml", "json"].contains(&ext_str.as_str()) {
-            eprintln!(
+            print_error(format!(
                 "{} {}",
                 "Error:".red().bold(),
                 "Only YAML and JSON files are supported.".red()
-            );
+            ));
             return;
         }
     } else {
-        eprintln!(
+        print_error(format!(
             "{} {}\n",
             "Error:".red().bold(),
             "File has no extension. Only YAML and JSON files are supported.".red()
-        );
+        ));
         return;
     }
 
@@ -43,16 +48,16 @@ pub fn set_keys(path: OsString) {
             let pubkey = match extract_public_key(&key) {
                 Ok(k) => k,
                 Err(err) => {
-                    eprint!("{}{}", "❌ Error getting public key: \n".red(), err);
+                    print_error(format!("{}{}", "Error getting public key: \n".red(), err));
                     return;
                 }
             };
             if pubkey.is_empty() {
-                eprintln!(
+                print_error(format!(
                     "{} {}",
                     "Error:".red().bold(),
                     "Could not extract public key from the age key.\n".red()
-                );
+                ));
                 return;
             }
 
@@ -63,7 +68,7 @@ pub fn set_keys(path: OsString) {
             let encrypted_regex = match prompt_for_encryption_pattern() {
                 Ok(t) => t,
                 Err(error) => {
-                    eprint!("{}: {}", "❌ Error getting regex\n".red(), error);
+                    print_error(format!("{}: {}", "Error getting regex\n".red(), error));
                     return;
                 }
             };
@@ -71,10 +76,10 @@ pub fn set_keys(path: OsString) {
             // Update the SOPS configuration
             match update_sops_config(&file_name, &pubkey, &encrypted_regex) {
                 Ok(_) => {
-                    print!("{}", "✅ Successfully updated .sops.yaml\n".green());
+                    print_success(format!("{}", "Successfully updated .sops.yaml\n".green()));
                 }
                 Err(err) => {
-                    eprint!("{}: {}", "❌ Error updating .sops.yam\n".red(), err);
+                    print_error(format!("{}: {}", "Error updating .sops.yam\n".red(), err));
                     return;
                 }
             }
@@ -83,7 +88,7 @@ pub fn set_keys(path: OsString) {
             println!("  {} {}\n", "opsops encrypt".yellow(), path_str.yellow());
         }
         Err(e) => {
-            eprintln!("{} {}", "Error:".red().bold(), e.red());
+            print_error(format!("{} {}", "Error:".red().bold(), e.red()));
         }
     }
 }
@@ -125,16 +130,17 @@ fn prompt_for_encryption_pattern() -> std::io::Result<String> {
 }
 
 // Update the SOPS configuration with the new encryption pattern
+// TODO: Move this somehwere better
 fn update_sops_config(file_name: &str, pubkey: &str, encrypted_regex: &str) -> std::io::Result<()> {
     // Read the current SOPS configuration
     let mut config = match sops_config::read_or_create_config() {
         Ok(cfg) => cfg,
         Err(e) => {
-            eprintln!(
+            print_error(format!(
                 "{} {}",
                 "Error:".red().bold(),
                 format!("Failed to read SOPS config: {}", e).red()
-            );
+            ));
             return Ok(());
         }
     };
@@ -171,11 +177,11 @@ fn update_sops_config(file_name: &str, pubkey: &str, encrypted_regex: &str) -> s
 
     // Write the updated configuration
     if let Err(e) = sops_config::write_config(&config) {
-        eprintln!(
+        print_error(format!(
             "{} {}",
             "Error:".red().bold(),
             format!("Failed to write SOPS config: {}", e).red()
-        );
+        ));
         return Ok(());
     }
 

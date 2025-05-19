@@ -7,6 +7,7 @@ use std::ffi::OsString;
 use std::fs;
 use std::io;
 use std::path::Path;
+use util::print_status::print_info;
 
 #[derive(Debug, Parser)]
 #[command(name = "opsops")]
@@ -100,7 +101,7 @@ impl Cli {
         // Generate Fish completions
         let mut cmd = Cli::command();
         let path = generate_to(Fish, &mut cmd, "opsops", &completion_dir)?;
-        println!("Generated Fish completions at: {}", path.display());
+        print_info(format!("Generated Fish completions at: {}", path.display()));
 
         println!("\nTo install:");
         println!("  Man pages:          mkdir -p ~/.local/share/man/man1");

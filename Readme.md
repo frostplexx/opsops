@@ -209,5 +209,5 @@ OpsOps is designed with security in mind:
 - [ ] Add more options like specifying a key file or manually specifying a 1password item in-line
 - [X] init should offer to generate a blank .sops.yaml if it doesn't exist.
 - [ ] Add autocomplete
-- [ ] Add set key command:
+- [X] Add set key command:
     - ^(String|STRING) 

@@ -1,3 +1,4 @@
+use crate::util::print_status::{print_error, print_info, print_success};
 use crate::util::sops_command::SopsCommandBuilder;
 use crate::util::sops_status::is_file_unchanged_status;
 use colored::Colorize;
@@ -10,36 +11,36 @@ pub fn encrypt(path: OsString) {
     let path_str = match path.into_string() {
         Ok(p) => p,
         Err(os) => {
-            eprintln!("{} {:?}", "❌ Invalid UTF-8 in path:".red(), os);
+            print_error(format!("{} {:?}", "Invalid UTF-8 in path:".red(), os));
             std::process::exit(1);
         }
     };
 
     // Check if the file exists
     if !Path::new(&path_str).is_file() {
-        eprintln!("{} {}", "❌ File not found:".red(), path_str);
+        print_error(format!("{} {}", "File not found:".red(), path_str));
         std::process::exit(1);
     }
 
     // Ensure sops is installed
     if which::which("sops").is_err() {
-        eprintln!(
+        print_error(format!(
             "{} {}",
-            "❌ 'sops' is not installed or not in PATH.".red(),
+            "'sops' is not installed or not in PATH.".red(),
             "Please install it first.".dimmed()
-        );
+        ));
         std::process::exit(1);
     }
 
     let output_path = format!("{}", path_str);
 
-    println!(
+    print_info(format!(
         "{} {} {} {}",
         "🔐 Encrypting".green(),
         path_str,
         "to".green(),
         output_path
-    );
+    ));
 
     // Create a SOPS command with the Age key from 1Password
     let sops_command = match SopsCommandBuilder::new()
@@ -51,7 +52,7 @@ pub fn encrypt(path: OsString) {
     {
         Ok(cmd) => cmd,
         Err(e) => {
-            eprintln!("{} {}", "❌ Failed to get Age key:".red(), e);
+            print_error(format!("{} {}", "Failed to get Age key:".red(), e));
             std::process::exit(1);
         }
     };
@@ -59,26 +60,30 @@ pub fn encrypt(path: OsString) {
     // Run the command
     match sops_command.status() {
         Ok(status) if status.success() => {
-            println!(
+            print_success(format!(
                 "{} {} {}",
-                "✅ Successfully encrypted file to".green(),
+                "Successfully encrypted file to".green(),
                 output_path,
                 "with SOPS".green()
-            );
+            ));
         }
         Ok(status) if is_file_unchanged_status(&status) => {
-            println!("{} {}", "ℹ️ File has not changed.".blue(), output_path);
+            print_info(format!(
+                "{} {}",
+                "ℹ️ File has not changed.".blue(),
+                output_path
+            ));
         }
         Ok(status) => {
-            eprintln!(
+            print_error(format!(
                 "{} Exit code: {}",
-                "❌ Error while encrypting the file.".red(),
+                "Error while encrypting the file.".red(),
                 status
-            );
+            ));
             std::process::exit(status.code().unwrap_or(1));
         }
         Err(e) => {
-            eprintln!("{} {:?}", "❌ Failed to launch sops:".red(), e);
+            print_error(format!("{} {:?}", "Failed to launch sops:".red(), e));
             std::process::exit(1);
         }
     }
