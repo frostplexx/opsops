@@ -11,7 +11,7 @@ use util::print_status::print_info;
 
 #[derive(Debug, Parser)]
 #[command(name = "opsops")]
-#[command(about = "A wrapper that integrates sops with 1Password", long_about = None)]
+#[command(version, about = "A wrapper that integrates sops with 1Password", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
