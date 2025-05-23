@@ -39,13 +39,7 @@ pub fn decrypt(path: OsString) {
         format!("{}", path_str)
     };
 
-    println!(
-        "{} {} {} {}",
-        "🔓 Decrypting".green(),
-        path_str,
-        "to".green(),
-        output_path
-    );
+    println!("{}", "🔓 Decrypting".green(),);
 
     // Create a SOPS command with the Age key from 1Password
     let sops_command = match SopsCommandBuilder::new()
@@ -66,10 +60,8 @@ pub fn decrypt(path: OsString) {
     match sops_command.status() {
         Ok(status) if status.success() => {
             print_success(format!(
-                "{} {} {}",
-                "Successfully decrypted file to".green(),
-                output_path,
-                "with SOPS".green()
+                "{}",
+                "Successfully decrypted file with SOPS".green()
             ));
         }
         Ok(status) if is_file_unchanged_status(&status) => {

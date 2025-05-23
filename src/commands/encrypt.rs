@@ -34,13 +34,7 @@ pub fn encrypt(path: OsString) {
 
     let output_path = format!("{}", path_str);
 
-    print_info(format!(
-        "{} {} {} {}",
-        "🔐 Encrypting".green(),
-        path_str,
-        "to".green(),
-        output_path
-    ));
+    print_info(format!("{}", "🔐 Encrypting to".green(),));
 
     // Create a SOPS command with the Age key from 1Password
     let sops_command = match SopsCommandBuilder::new()
@@ -61,10 +55,8 @@ pub fn encrypt(path: OsString) {
     match sops_command.status() {
         Ok(status) if status.success() => {
             print_success(format!(
-                "{} {} {}",
-                "Successfully encrypted file to".green(),
-                output_path,
-                "with SOPS".green()
+                "{}",
+                "Successfully encrypted file to with SOPS".green()
             ));
         }
         Ok(status) if is_file_unchanged_status(&status) => {
