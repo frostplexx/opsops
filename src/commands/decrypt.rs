@@ -39,7 +39,12 @@ pub fn decrypt(path: OsString) {
         format!("{}", path_str)
     };
 
-    println!("{}", "🔓 Decrypting".green(),);
+    println!(
+        "{} {} -> {}",
+        "🔓 Decrypting".green(),
+        path_str,
+        output_path
+    );
 
     // Create a SOPS command with the Age key from 1Password
     let sops_command = match SopsCommandBuilder::new()
