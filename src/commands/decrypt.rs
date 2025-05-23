@@ -40,10 +40,9 @@ pub fn decrypt(path: OsString) {
     };
 
     println!(
-        "{} {} {} {}",
+        "{} {} -> {}",
         "🔓 Decrypting".green(),
         path_str,
-        "to".green(),
         output_path
     );
 
@@ -66,10 +65,8 @@ pub fn decrypt(path: OsString) {
     match sops_command.status() {
         Ok(status) if status.success() => {
             print_success(format!(
-                "{} {} {}",
-                "Successfully decrypted file to".green(),
-                output_path,
-                "with SOPS".green()
+                "{}",
+                "Successfully decrypted file with SOPS".green()
             ));
         }
         Ok(status) if is_file_unchanged_status(&status) => {

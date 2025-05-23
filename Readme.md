@@ -208,6 +208,6 @@ OpsOps is designed with security in mind:
     - [ ] If age keys don't offer to update
 - [ ] Add more options like specifying a key file or manually specifying a 1password item in-line
 - [X] init should offer to generate a blank .sops.yaml if it doesn't exist.
-- [ ] Add autocomplete
+- [X] Add autocomplete
 - [X] Add set key command:
     - ^(String|STRING) 
