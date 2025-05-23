@@ -56,7 +56,7 @@ enum Commands {
     /// Initialize opsops
     Init {},
 
-    /// Read an encrypted file and print its decypted content to stdout
+    /// Read an encrypted file and print its decrypted content to stdout
     Read {
         #[arg(value_name = "PATH", help = "Path to the file to read")]
         path: OsString,
