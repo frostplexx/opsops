@@ -6,6 +6,7 @@ use clap_mangen::Man;
 use std::ffi::OsString;
 use std::fs;
 use std::io;
+use std::path;
 use std::path::Path;
 use util::print_status::print_info;
 
@@ -54,6 +55,12 @@ enum Commands {
 
     /// Initialize opsops
     Init {},
+
+    /// Read an encrypted file and print its decypted content to stdout
+    Read {
+        #[arg(value_name = "PATH", help = "Path to the file to read")]
+        path: OsString,
+    },
 
     /// Set up encryption patterns for a file
     #[command(arg_required_else_help = true)]
@@ -133,6 +140,7 @@ fn main() -> io::Result<()> {
         Commands::Doctor {} => commands::doctor::doctor(),
         Commands::TargetKeys { path } => commands::set_key::set_keys(path),
         Commands::GenerateDocs { dir } => Cli::generate_docs(&dir)?,
+        Commands::Read { path } => commands::read::read(path),
     }
 
     Ok(())
