@@ -25,11 +25,11 @@ pub fn get_age_key_from_1password() -> Result<String, String> {
 
     // Extract the 1Password reference
     let op_reference = config.onepassworditem;
-    print_info(format!(
-        "{} {}",
-        "🔑 Retrieving Age key from".dimmed(),
-        op_reference.dimmed()
-    ));
+    // print_info(format!(
+    //     "{} {}",
+    //     "🔑 Retrieving Age key from".dimmed(),
+    //     op_reference.dimmed()
+    // ));
 
     // Run the op command to get the key
     // Format: op://<vault>/<item>/<field>
