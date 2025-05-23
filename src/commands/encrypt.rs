@@ -34,7 +34,7 @@ pub fn encrypt(path: OsString) {
 
     let output_path = format!("{}", path_str);
 
-    print_info(format!("{}", "🔐 Encrypting to".green(),));
+    print_info(format!("{} {}", "🔐 Encrypting to".green(), path_str));
 
     // Create a SOPS command with the Age key from 1Password
     let sops_command = match SopsCommandBuilder::new()
