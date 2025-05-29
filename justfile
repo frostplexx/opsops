@@ -26,31 +26,31 @@ release:
 
 # Run the application
 run *ARGS:
-    cargo run -- {{ARGS}}
+    @cargo run -- {{ARGS}}
 
 # Run tests
 test:
-    cargo test
+    @cargo test
 
 # Run tests with output
 test-verbose:
-    cargo test -- --nocapture
+    @cargo test -- --nocapture
 
 # Run specific test
 test-one TEST:
-    cargo test {{TEST}}
+    @cargo test {{TEST}}
 
 # Run clippy lints
 lint:
-    cargo clippy -- -D warnings
+    @cargo clippy -- -D warnings
 
 # Format code
 fmt:
-    cargo fmt
+    @cargo fmt
 
 # Check formatting without modifying files
 fmt-check:
-    cargo fmt -- --check
+    @cargo fmt -- --check
 
 # Run clippy and formatting checks
 check: fmt-check lint
@@ -58,27 +58,27 @@ check: fmt-check lint
 
 # Update dependencies
 update:
-    cargo update
+    @cargo update
 
 # Show dependency tree
 deps:
-    cargo tree
+    @cargo tree
 
 # Clean build artifacts
 clean:
-    cargo clean
+    @cargo clean
 
 # Generate documentation
 docs:
-    cargo doc --no-deps --open
+    @cargo doc --no-deps --open
 
 # Watch for changes and run tests
 watch-test:
-    cargo watch -x test
+    @cargo watch -x test
 
 # Watch for changes and run the app
 watch-run:
-    cargo watch -x run
+    @cargo watch -x run
 
 # Install development dependencies
 setup-dev:
@@ -91,14 +91,14 @@ setup-dev:
 
 # Audit for vulnerabilities
 audit:
-    cargo audit
+    @cargo audit
 
 # Check for outdated dependencies
 outdated:
-    cargo outdated
+    @cargo outdated
 
 # Create a new release with bumped version
-release-version TYPE="patch":
+@release-version TYPE="patch":
     #!/usr/bin/env sh
     if ! command -v cargo-edit >/dev/null 2>&1; then
         echo "cargo-edit not found. Install it with: cargo install cargo-edit"
