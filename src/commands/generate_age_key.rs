@@ -10,7 +10,7 @@ use crate::{
     },
 };
 
-pub fn generate_age_key(context: &GlobalContext) {
+pub fn generate_age_key(_context: &GlobalContext) {
     let key = x25519::Identity::generate();
     let pubkey = key.to_public();
 

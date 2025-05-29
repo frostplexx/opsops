@@ -1,6 +1,6 @@
 use crate::{
     GlobalContext,
-    util::{print_status::print_info, sops_config::read_or_create_config},
+    util::sops_config::read_or_create_config,
 };
 use age::{
     secrecy::{ExposeSecret, SecretString},

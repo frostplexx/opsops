@@ -5,9 +5,8 @@ use colored::Colorize;
 use crate::{
     GlobalContext,
     util::{
-        print_status::{print_error, print_info, print_success},
+        print_status::print_error,
         sops_command::SopsCommandBuilder,
-        sops_status::is_file_unchanged_status,
     },
 };
 

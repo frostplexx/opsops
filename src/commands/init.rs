@@ -28,7 +28,7 @@ pub fn init(context: &GlobalContext) {
                 return;
             }
 
-            let config: SopsConfig = match from_str(&contents) {
+            let _: SopsConfig = match from_str(&contents) {
                 Ok(c) => c,
                 Err(e) => {
                     print_error(format!("{} {}", "Failed to parse YAML:".red(), e));
@@ -87,13 +87,13 @@ fn assign_op_item(context: &GlobalContext) {
         let vaults = match get_vaults() {
             Some(vaults) => vaults,
             None => {
-                print_error(format!("Failed to retrieve vaults."));
+                print_error(format!("Failed to retrieve vaults.").to_string());
                 return;
             }
         };
         // If no vaults are found, exit
         if vaults.is_empty() {
-            print_error(format!("No vaults found."));
+            print_error(format!("No vaults found.").to_string());
             return;
         }
         // Let the user select a vault
@@ -111,7 +111,7 @@ fn assign_op_item(context: &GlobalContext) {
         };
         // If no vaults are found, exit
         if items.is_empty() {
-            print_error(format!("No items found."));
+            print_error(format!("No items found.").to_string());
             return;
         }
         // Prompt for the 1Password item name
@@ -123,13 +123,13 @@ fn assign_op_item(context: &GlobalContext) {
         let fields = match get_fields(&items[selected_item], &vaults[selected_vault]) {
             Some(vaults) => vaults,
             None => {
-                print_error(format!("Failed to retrieve items."));
+                print_error(format!("Failed to retrieve items.").to_string());
                 return;
             }
         };
         // If no vaults are found, exit
         if fields.is_empty() {
-            print_error(format!("No items found."));
+            print_error(format!("No items found.").to_string());
             return;
         }
         // Prompt for the 1Password item name

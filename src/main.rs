@@ -6,7 +6,6 @@ use clap_mangen::Man;
 use std::ffi::OsString;
 use std::fs;
 use std::io;
-use std::path;
 use std::path::Path;
 use util::print_status::print_info;
 

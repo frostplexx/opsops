@@ -20,20 +20,20 @@ pub struct ListItem {
 
 #[derive(Debug, Deserialize)]
 pub struct Vault {
-    id: String,
+    // id: String,
     name: String,
-    content_version: u32,
-    created_at: String,
-    updated_at: String,
-    items: u32,
+    // content_version: u32,
+    // created_at: String,
+    // updated_at: String,
+    // items: u32,
 }
 
 /// Represents the category of a 1Password item.
 pub enum OpCategory {
     Login,
     Password,
-    Identity,
-    Server,
+    // Identity,
+    // Server,
 }
 
 impl OpCategory {
@@ -41,8 +41,8 @@ impl OpCategory {
         match self {
             OpCategory::Login => "login",
             OpCategory::Password => "password",
-            OpCategory::Identity => "identity",
-            OpCategory::Server => "server",
+            // OpCategory::Identity => "identity",
+            // OpCategory::Server => "server",
         }
     }
 }
@@ -113,7 +113,7 @@ pub fn op_item_create(item: OpItem) {
     let status = cmd.status().expect("failed to run `op` command");
 
     if !status.success() {
-        print_error(format!("Failed to create item in 1Password"));
+        print_error(format!("Failed to create item in 1Password").to_string());
     }
 }
 

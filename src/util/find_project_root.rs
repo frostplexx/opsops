@@ -13,7 +13,7 @@ pub fn find_project_root() -> Option<PathBuf> {
         .and_then(|repo| repo.workdir().map(|p| p.to_path_buf()))
         .or_else(|| find_root_by_indicators(&root_indicators));
 
-    return project_root;
+    project_root
 }
 
 /// Fallback method to find root by walking up directories looking for indicators.
