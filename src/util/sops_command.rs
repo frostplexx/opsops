@@ -32,7 +32,7 @@ impl<'a> SopsCommandBuilder<'a> {
     }
 
     /// Add multiple arguments to the SOPS command
-    pub fn args<I, S>(mut self, args: I) -> Self
+    pub fn _args<I, S>(mut self, args: I) -> Self
     where
         I: IntoIterator<Item = S>,
         S: AsRef<std::ffi::OsStr>,
@@ -42,7 +42,7 @@ impl<'a> SopsCommandBuilder<'a> {
     }
 
     /// Set the working directory for the command
-    pub fn current_dir<P: AsRef<std::path::Path>>(mut self, dir: P) -> Self {
+    pub fn _current_dir<P: AsRef<std::path::Path>>(mut self, dir: P) -> Self {
         self.command.current_dir(dir);
         self
     }
@@ -54,6 +54,15 @@ impl<'a> SopsCommandBuilder<'a> {
         self.command.env("SOPS_AGE_KEY", age_key);
         self.has_age_key = true;
         Ok(self)
+    }
+
+    /// Try to set the Age key, but don't fail if it's not available
+    pub fn _with_optional_age_key(mut self) -> Self {
+        if let Ok(age_key) = get_age_key_from_1password(self.context) {
+            self.command.env("SOPS_AGE_KEY", age_key);
+            self.has_age_key = true;
+        }
+        self
     }
 
     /// Run the command and wait for it to finish
@@ -116,7 +125,7 @@ mod tests {
 
         let output = SopsCommandBuilder::new(&context)
             .arg("--version")
-            .output()
+            ._output()
             .expect("Failed to run sops");
 
         assert!(output.status.success());
@@ -136,11 +145,11 @@ mod tests {
         ));
 
         let output = SopsCommandBuilder::new(&context)
-            .with_optional_age_key()
+            ._with_optional_age_key()
             .arg("-e")
             .arg("/dev/null")
-            .stderr(Stdio::piped())
-            .output();
+            ._stderr(Stdio::piped())
+            ._output();
 
         match output {
             Ok(output) => {

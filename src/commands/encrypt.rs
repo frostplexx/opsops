@@ -33,7 +33,7 @@ pub fn encrypt(path: OsString, context: &GlobalContext) {
         std::process::exit(1);
     }
 
-    let output_path = format!("{}", path_str.to_string());
+    let output_path = path_str.to_string();
 
     print_info(format!("{} {}", "🔐 Encrypting to".green(), path_str));
 

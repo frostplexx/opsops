@@ -1,7 +1,4 @@
-use crate::{
-    GlobalContext,
-    util::sops_config::read_or_create_config,
-};
+use crate::{GlobalContext, util::sops_config::read_or_create_config};
 use age::{
     secrecy::{ExposeSecret, SecretString},
     x25519::Identity,

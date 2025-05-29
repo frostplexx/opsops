@@ -30,19 +30,19 @@ pub struct Vault {
 
 /// Represents the category of a 1Password item.
 pub enum OpCategory {
-    Login,
+    _Login,
     Password,
-    // Identity,
-    // Server,
+    _Identity,
+    _Server,
 }
 
 impl OpCategory {
     pub fn as_str(&self) -> &'static str {
         match self {
-            OpCategory::Login => "login",
+            OpCategory::_Login => "login",
             OpCategory::Password => "password",
-            // OpCategory::Identity => "identity",
-            // OpCategory::Server => "server",
+            OpCategory::_Identity => "identity",
+            OpCategory::_Server => "server",
         }
     }
 }
@@ -56,7 +56,7 @@ pub struct OpItemField {
 }
 
 impl OpItemField {
-    fn to_flag(&self) -> String {
+    fn _to_flag(&self) -> String {
         let mut flag = String::new();
         if let Some(section) = &self.section {
             flag.push_str(section);
@@ -113,11 +113,11 @@ pub fn op_item_create(item: OpItem) {
     let status = cmd.status().expect("failed to run `op` command");
 
     if !status.success() {
-        print_error(format!("Failed to create item in 1Password").to_string());
+        print_error("Failed to create item in 1Password".to_string());
     }
 }
 
-pub fn op_item_get(item_name: &str, field: &str) -> Option<String> {
+pub fn _op_item_get(item_name: &str, field: &str) -> Option<String> {
     let output = Command::new("op")
         .arg("item")
         .arg("get")
@@ -248,7 +248,7 @@ mod tests {
             field_type: Some("text".to_string()),
             value: "admin".to_string(),
         };
-        assert_eq!(field.to_flag(), "auth.username[text]=admin");
+        assert_eq!(field._to_flag(), "auth.username[text]=admin");
     }
 
     #[test]
@@ -256,7 +256,7 @@ mod tests {
         let item = OpItem {
             vault: "TestVault".to_string(),
             title: "MyLogin".to_string(),
-            category: OpCategory::Login,
+            category: OpCategory::_Login,
             fields: vec![
                 OpItemField {
                     section: None,
@@ -279,7 +279,7 @@ mod tests {
 
         // You'd need to refactor `op_item_create` to allow inspecting the command, otherwise this test cannot safely verify the internals.
         // See note below.
-        assert!(item.fields[1].to_flag() == "credentials.password[password]=secret");
+        assert!(item.fields[1]._to_flag() == "credentials.password[password]=secret");
     }
 
     #[test]

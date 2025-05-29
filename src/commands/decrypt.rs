@@ -37,7 +37,7 @@ pub fn decrypt(path: OsString, context: &GlobalContext) {
     let output_path = if path_str.ends_with(".enc") {
         path_str[..path_str.len() - 4].to_string()
     } else {
-        format!("{}", path_str.to_string())
+        path_str.to_string()
     };
 
     println!(

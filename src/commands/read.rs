@@ -4,10 +4,7 @@ use colored::Colorize;
 
 use crate::{
     GlobalContext,
-    util::{
-        print_status::print_error,
-        sops_command::SopsCommandBuilder,
-    },
+    util::{print_status::print_error, sops_command::SopsCommandBuilder},
 };
 
 pub fn read(path: OsString, context: &GlobalContext) {
