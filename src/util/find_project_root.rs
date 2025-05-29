@@ -1,6 +1,8 @@
 use git2::Repository;
 use std::path::PathBuf;
 
+use super::print_status::print_warning;
+
 pub fn find_project_root() -> Option<PathBuf> {
     // Root indicators to fall back on
     let root_indicators = vec![".git", "src", "flake.nix", "package.json", "Cargo.toml"];
@@ -32,5 +34,8 @@ fn find_root_by_indicators(indicators: &[&str]) -> Option<PathBuf> {
         }
     }
 
-    None
+    print_warning(
+        "Couldn't find project root, falling back to current directory. Please use the --sops-file flag",
+    );
+    Some(std::env::current_dir().ok()?)
 }
