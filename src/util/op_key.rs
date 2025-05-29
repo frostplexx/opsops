@@ -84,21 +84,8 @@ pub fn extract_public_key(private_key: &str) -> Result<String, &'static str> {
 
 #[cfg(test)]
 mod tests {
-    use std::process::Command;
 
     use crate::util::op_key::extract_public_key;
-
-    pub trait ShellRunner {
-        fn run(&self, args: &[&str]) -> std::io::Result<std::process::Output>;
-    }
-
-    pub struct RealShell;
-
-    impl ShellRunner for RealShell {
-        fn run(&self, args: &[&str]) -> std::io::Result<std::process::Output> {
-            Command::new("op").args(args).output()
-        }
-    }
 
     #[test]
     fn test_extract_public_key_valid() {
