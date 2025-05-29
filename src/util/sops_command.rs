@@ -103,3 +103,61 @@ impl<'a> SopsCommandBuilder<'a> {
         self
     }
 }
+
+#[cfg(test)]
+mod tests {
+
+    use std::process::Stdio;
+
+    use crate::GlobalContext;
+    use crate::util::sops_command::SopsCommandBuilder;
+
+    fn mock_context(opitem: Option<String>) -> GlobalContext {
+        GlobalContext {
+            opitem,
+            sops_file: None,
+        }
+    }
+
+    #[test]
+    fn test_builder_runs_valid_command() {
+        let context = mock_context(None);
+
+        let output = SopsCommandBuilder::new(&context)
+            .arg("--version")
+            .output()
+            .expect("Failed to run sops");
+
+        assert!(output.status.success());
+        let out_str = String::from_utf8_lossy(&output.stdout);
+        assert!(
+            out_str.contains("sops") || out_str.contains("version"),
+            "unexpected output: {}",
+            out_str
+        );
+    }
+
+    #[test]
+    fn test_env_injection() {
+        let context = mock_context(Some(
+            "AGE-SECRET-KEY-1AM036DUJQ8RTJ84N7JTJECSV6FXFM3DCM9F4VEX4ZPL4M3VDA6FQLVJSUR"
+                .to_string(),
+        ));
+
+        let output = SopsCommandBuilder::new(&context)
+            .with_optional_age_key()
+            .arg("-e")
+            .arg("/dev/null")
+            .stderr(Stdio::piped())
+            .output();
+
+        match output {
+            Ok(output) => {
+                // Not checking for success, just that command ran and Age key was accepted
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                assert!(!stderr.contains("missing AGE key"));
+            }
+            Err(e) => panic!("Command execution failed: {}", e),
+        }
+    }
+}

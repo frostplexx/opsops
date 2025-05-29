@@ -142,3 +142,90 @@ pub fn write_config(config: &SopsConfig, context: &GlobalContext) -> Result<(), 
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+
+    use std::fs;
+
+    use tempfile::tempdir;
+
+    use crate::GlobalContext;
+    use crate::util::sops_config::{read_or_create_config, write_config};
+    use crate::util::sops_structs::{CreationRule, SopsConfig};
+
+    #[test]
+    fn test_read_or_create_config_with_no_file() {
+        let dir = tempdir().unwrap();
+        let context = GlobalContext {
+            sops_file: Some(dir.path().join(".sops.yaml").to_string_lossy().into()),
+            opitem: Some("op://Vault/Item/Field".to_string()),
+        };
+
+        let config = read_or_create_config(&context).expect("should create default config");
+        assert_eq!(config.onepassworditem, "op://Vault/Item/Field");
+        assert!(config.creation_rules.is_empty());
+    }
+
+    #[test]
+    fn test_read_or_create_config_with_valid_file() {
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join(".sops.yaml");
+        fs::write(
+            &file_path,
+            "onepassworditem: op://Vault/Item/Field\ncreation_rules: []\n",
+        )
+        .unwrap();
+
+        let context = GlobalContext {
+            sops_file: Some(file_path.to_string_lossy().into()),
+            opitem: None,
+        };
+
+        let config = read_or_create_config(&context).expect("should read valid config");
+        assert_eq!(config.onepassworditem, "op://Vault/Item/Field");
+    }
+
+    #[test]
+    fn test_read_or_create_config_with_missing_field() {
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join(".sops.yaml");
+        fs::write(&file_path, "creation_rules: []\n").unwrap();
+
+        let context = GlobalContext {
+            sops_file: Some(file_path.to_string_lossy().into()),
+            opitem: Some("op://Vault/Item/Fallback".to_string()),
+        };
+
+        let config = read_or_create_config(&context).expect("should fallback on missing field");
+        assert_eq!(config.onepassworditem, "op://Vault/Item/Fallback");
+        assert!(config.creation_rules.is_empty());
+    }
+
+    #[test]
+    fn test_write_config_creates_file() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join(".sops.yaml");
+
+        let context = GlobalContext {
+            sops_file: Some(path.to_string_lossy().into()),
+            opitem: None,
+        };
+
+        let config = SopsConfig {
+            onepassworditem: "op://Vault/Item/Field".to_string(),
+            creation_rules: vec![CreationRule {
+                path_regex: Some(".*".to_string()),
+                age: Some("AGE-RECIPIENT-KEY".to_string()), // or None
+                encrypted_regex: None,                      // optional
+                key_groups: vec![],
+            }],
+        };
+
+        write_config(&config, &context).expect("should write config successfully");
+
+        let written = fs::read_to_string(path).unwrap();
+        assert!(written.contains("onepassworditem"));
+        assert!(written.contains("creation_rules"));
+    }
+}

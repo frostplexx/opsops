@@ -84,3 +84,40 @@ pub fn extract_public_key(private_key: &str) -> Result<String, &'static str> {
 
     Ok(derived_public_key)
 }
+
+#[cfg(test)]
+mod tests {
+    use std::process::Command;
+
+    use crate::util::op_key::extract_public_key;
+
+    pub trait ShellRunner {
+        fn run(&self, args: &[&str]) -> std::io::Result<std::process::Output>;
+    }
+
+    pub struct RealShell;
+
+    impl ShellRunner for RealShell {
+        fn run(&self, args: &[&str]) -> std::io::Result<std::process::Output> {
+            Command::new("op").args(args).output()
+        }
+    }
+
+    #[test]
+    fn test_extract_public_key_valid() {
+        let private_key =
+            "AGE-SECRET-KEY-1X9Q72KQG3J383K5SA030D46Q8WTYPDEKV6UA0RXZCXN56YVN22YQMNNCXJ";
+        let result = extract_public_key(private_key);
+        assert!(result.is_ok());
+
+        let pub_key = result.unwrap();
+        assert!(pub_key.starts_with("age1"));
+    }
+
+    #[test]
+    fn test_extract_public_key_invalid() {
+        let invalid_key = "not-a-valid-key";
+        let result = extract_public_key(invalid_key);
+        assert!(result.is_err());
+    }
+}

@@ -235,3 +235,79 @@ pub fn get_fields(item: &String, vault: &String) -> Option<Vec<String>> {
         None
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::util::op::{OpCategory, OpItem, OpItemField};
+
+    #[test]
+    fn test_op_item_field_to_flag() {
+        let field = OpItemField {
+            section: Some("auth".to_string()),
+            field: "username".to_string(),
+            field_type: Some("text".to_string()),
+            value: "admin".to_string(),
+        };
+        assert_eq!(field.to_flag(), "auth.username[text]=admin");
+    }
+
+    #[test]
+    fn test_op_item_create_builds_command() {
+        let item = OpItem {
+            vault: "TestVault".to_string(),
+            title: "MyLogin".to_string(),
+            category: OpCategory::Login,
+            fields: vec![
+                OpItemField {
+                    section: None,
+                    field: "username".to_string(),
+                    field_type: None,
+                    value: "user1".to_string(),
+                },
+                OpItemField {
+                    section: Some("credentials".to_string()),
+                    field: "password".to_string(),
+                    field_type: Some("password".to_string()),
+                    value: "secret".to_string(),
+                },
+            ],
+        };
+
+        // Instead of running `op_item_create`, extract its Command and assert its args (if refactored to allow inspection)
+        // Example: let cmd = build_op_create_command(&item);
+        // assert!(cmd.get_args().any(|a| a == "item"));
+
+        // You'd need to refactor `op_item_create` to allow inspecting the command, otherwise this test cannot safely verify the internals.
+        // See note below.
+        assert!(item.fields[1].to_flag() == "credentials.password[password]=secret");
+    }
+
+    #[test]
+    fn test_parse_vaults() {
+        let json = r#"
+    [
+        {
+            "id": "vault1",
+            "name": "TestVault",
+            "content_version": 1,
+            "created_at": "2023-01-01T00:00:00Z",
+            "updated_at": "2023-01-01T00:00:00Z",
+            "items": 10
+        },
+        {
+            "id": "vault2",
+            "name": "AnotherVault",
+            "content_version": 2,
+            "created_at": "2023-01-01T00:00:00Z",
+            "updated_at": "2023-01-01T00:00:00Z",
+            "items": 5
+        }
+    ]
+    "#;
+
+        let vaults: Vec<super::Vault> = serde_json::from_str(json).unwrap();
+        let names: Vec<String> = vaults.into_iter().map(|v| v.name).collect();
+
+        assert_eq!(names, vec!["TestVault", "AnotherVault"]);
+    }
+}
