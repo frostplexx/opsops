@@ -109,7 +109,7 @@ fn prompt_for_encryption_pattern() -> std::io::Result<String> {
         .default(0)
         .items(&options)
         .interact()
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+        .map_err(|e| std::io::Error::other(e))?;
 
     let encrypted_regex = match selection {
         0 => Ok(".*".to_string()),
@@ -122,7 +122,7 @@ fn prompt_for_encryption_pattern() -> std::io::Result<String> {
             dialoguer::Input::<String>::new()
                 .with_prompt("Enter your regex pattern to match keys you want to encrypt\nExample: ^(password|api_key|secret)")
                 .interact()
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+                .map_err(|e| std::io::Error::other(e))
         }
         _ => Ok(".*".to_string()),
     }?;
