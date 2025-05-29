@@ -2,13 +2,12 @@ use std::{ffi::OsString, path::Path};
 
 use colored::Colorize;
 
-use crate::util::{
-    print_status::{print_error, print_info, print_success},
-    sops_command::SopsCommandBuilder,
-    sops_status::is_file_unchanged_status,
+use crate::{
+    GlobalContext,
+    util::{print_status::print_error, sops_command::SopsCommandBuilder},
 };
 
-pub fn read(path: OsString) {
+pub fn read(path: OsString, context: &GlobalContext) {
     // Convert the path from OsString to String
     let path_str = match path.into_string() {
         Ok(p) => p,
@@ -24,7 +23,7 @@ pub fn read(path: OsString) {
         std::process::exit(1);
     }
 
-    let sops_command = match SopsCommandBuilder::new()
+    let sops_command = match SopsCommandBuilder::new(context)
         .arg("-d")
         .arg(&path_str)
         .with_age_key()

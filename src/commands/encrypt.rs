@@ -1,3 +1,4 @@
+use crate::GlobalContext;
 use crate::util::print_status::{print_error, print_info, print_success};
 use crate::util::sops_command::SopsCommandBuilder;
 use crate::util::sops_status::is_file_unchanged_status;
@@ -6,7 +7,7 @@ use std::ffi::OsString;
 use std::path::Path;
 
 /// Encrypts a file using SOPS with the Age key from 1Password
-pub fn encrypt(path: OsString) {
+pub fn encrypt(path: OsString, context: &GlobalContext) {
     // Convert the path from OsString to String
     let path_str = match path.into_string() {
         Ok(p) => p,
@@ -32,12 +33,12 @@ pub fn encrypt(path: OsString) {
         std::process::exit(1);
     }
 
-    let output_path = format!("{}", path_str);
+    let output_path = path_str.to_string();
 
     print_info(format!("{} {}", "🔐 Encrypting to".green(), path_str));
 
     // Create a SOPS command with the Age key from 1Password
-    let sops_command = match SopsCommandBuilder::new()
+    let sops_command = match SopsCommandBuilder::new(context)
         .arg("--encrypt")
         .arg("--output")
         .arg(&output_path)

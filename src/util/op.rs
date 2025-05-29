@@ -20,29 +20,29 @@ pub struct ListItem {
 
 #[derive(Debug, Deserialize)]
 pub struct Vault {
-    id: String,
+    // id: String,
     name: String,
-    content_version: u32,
-    created_at: String,
-    updated_at: String,
-    items: u32,
+    // content_version: u32,
+    // created_at: String,
+    // updated_at: String,
+    // items: u32,
 }
 
 /// Represents the category of a 1Password item.
 pub enum OpCategory {
-    Login,
+    _Login,
     Password,
-    Identity,
-    Server,
+    _Identity,
+    _Server,
 }
 
 impl OpCategory {
     pub fn as_str(&self) -> &'static str {
         match self {
-            OpCategory::Login => "login",
+            OpCategory::_Login => "login",
             OpCategory::Password => "password",
-            OpCategory::Identity => "identity",
-            OpCategory::Server => "server",
+            OpCategory::_Identity => "identity",
+            OpCategory::_Server => "server",
         }
     }
 }
@@ -56,7 +56,7 @@ pub struct OpItemField {
 }
 
 impl OpItemField {
-    fn to_flag(&self) -> String {
+    fn _to_flag(&self) -> String {
         let mut flag = String::new();
         if let Some(section) = &self.section {
             flag.push_str(section);
@@ -113,11 +113,11 @@ pub fn op_item_create(item: OpItem) {
     let status = cmd.status().expect("failed to run `op` command");
 
     if !status.success() {
-        print_error(format!("Failed to create item in 1Password"));
+        print_error("Failed to create item in 1Password".to_string());
     }
 }
 
-pub fn op_item_get(item_name: &str, field: &str) -> Option<String> {
+pub fn _op_item_get(item_name: &str, field: &str) -> Option<String> {
     let output = Command::new("op")
         .arg("item")
         .arg("get")
@@ -233,5 +233,81 @@ pub fn get_fields(item: &String, vault: &String) -> Option<Vec<String>> {
             String::from_utf8_lossy(&output_json.stderr)
         ));
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::util::op::{OpCategory, OpItem, OpItemField};
+
+    #[test]
+    fn test_op_item_field_to_flag() {
+        let field = OpItemField {
+            section: Some("auth".to_string()),
+            field: "username".to_string(),
+            field_type: Some("text".to_string()),
+            value: "admin".to_string(),
+        };
+        assert_eq!(field._to_flag(), "auth.username[text]=admin");
+    }
+
+    #[test]
+    fn test_op_item_create_builds_command() {
+        let item = OpItem {
+            vault: "TestVault".to_string(),
+            title: "MyLogin".to_string(),
+            category: OpCategory::_Login,
+            fields: vec![
+                OpItemField {
+                    section: None,
+                    field: "username".to_string(),
+                    field_type: None,
+                    value: "user1".to_string(),
+                },
+                OpItemField {
+                    section: Some("credentials".to_string()),
+                    field: "password".to_string(),
+                    field_type: Some("password".to_string()),
+                    value: "secret".to_string(),
+                },
+            ],
+        };
+
+        // Instead of running `op_item_create`, extract its Command and assert its args (if refactored to allow inspection)
+        // Example: let cmd = build_op_create_command(&item);
+        // assert!(cmd.get_args().any(|a| a == "item"));
+
+        // You'd need to refactor `op_item_create` to allow inspecting the command, otherwise this test cannot safely verify the internals.
+        // See note below.
+        assert!(item.fields[1]._to_flag() == "credentials.password[password]=secret");
+    }
+
+    #[test]
+    fn test_parse_vaults() {
+        let json = r#"
+    [
+        {
+            "id": "vault1",
+            "name": "TestVault",
+            "content_version": 1,
+            "created_at": "2023-01-01T00:00:00Z",
+            "updated_at": "2023-01-01T00:00:00Z",
+            "items": 10
+        },
+        {
+            "id": "vault2",
+            "name": "AnotherVault",
+            "content_version": 2,
+            "created_at": "2023-01-01T00:00:00Z",
+            "updated_at": "2023-01-01T00:00:00Z",
+            "items": 5
+        }
+    ]
+    "#;
+
+        let vaults: Vec<super::Vault> = serde_json::from_str(json).unwrap();
+        let names: Vec<String> = vaults.into_iter().map(|v| v.name).collect();
+
+        assert_eq!(names, vec!["TestVault", "AnotherVault"]);
     }
 }

@@ -2,12 +2,15 @@ use age::{secrecy::ExposeSecret, x25519};
 use colored::Colorize;
 use dialoguer::{Confirm, Input, theme::ColorfulTheme};
 
-use crate::util::{
-    op::{OpCategory, OpItem, OpItemField, op_item_create},
-    print_status::print_info,
+use crate::{
+    GlobalContext,
+    util::{
+        op::{OpCategory, OpItem, OpItemField, op_item_create},
+        print_status::print_info,
+    },
 };
 
-pub fn generate_age_key() {
+pub fn generate_age_key(_context: &GlobalContext) {
     let key = x25519::Identity::generate();
     let pubkey = key.to_public();
 

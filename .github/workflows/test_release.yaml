@@ -43,13 +43,11 @@ jobs:
         run: just fmt-check
 
       - name: Run linting
-        run: just lint || true # Allow lint to fail for now
+        run: just lint
 
       - name: Run tests
         run: just test
 
-      - name: Build
-        run: just build
 
   build-linux:
     needs: test

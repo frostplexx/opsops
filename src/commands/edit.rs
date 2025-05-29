@@ -1,3 +1,4 @@
+use crate::GlobalContext;
 use crate::util::print_status::{print_error, print_info, print_success};
 use crate::util::sops_command::SopsCommandBuilder;
 use crate::util::sops_status::is_file_unchanged_status;
@@ -5,7 +6,7 @@ use colored::Colorize;
 use std::ffi::OsString;
 
 /// Entry point for the `edit` command.
-pub fn edit(path: OsString) {
+pub fn edit(path: OsString, context: &GlobalContext) {
     // Convert the path from OsString to String
     let path_str = match path.into_string() {
         Ok(p) => p,
@@ -34,7 +35,10 @@ pub fn edit(path: OsString) {
     println!("{} {}", "📝 Opening file for editing:".green(), path_str);
 
     // Create a SOPS command with the Age key from 1Password
-    let sops_command = match SopsCommandBuilder::new().arg(&path_str).with_age_key() {
+    let sops_command = match SopsCommandBuilder::new(context)
+        .arg(&path_str)
+        .with_age_key()
+    {
         Ok(cmd) => cmd,
         Err(e) => {
             print_error(format!("{} {}", "Failed to get Age key:".red(), e));
