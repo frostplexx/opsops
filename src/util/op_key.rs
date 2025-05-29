@@ -1,4 +1,7 @@
-use crate::util::{print_status::print_info, sops_config::read_or_create_config};
+use crate::{
+    GlobalContext,
+    util::{print_status::print_info, sops_config::read_or_create_config},
+};
 use age::{
     secrecy::{ExposeSecret, SecretString},
     x25519::Identity,
@@ -8,23 +11,28 @@ use std::{process::Command, str::FromStr};
 
 use super::print_status::print_error;
 
-/// Retrieves the Age key from 1Password using the reference stored in .sops.yaml
+/// Retrieves the Age key from 1Password using the reference stored in .sops.yaml or from command line
 /// Returns the key as a string if successful, or an error message if not
-pub fn get_age_key_from_1password() -> Result<String, String> {
-    // Read the SOPS config to get the 1Password reference
-    let config =
-        read_or_create_config().map_err(|e| format!("Failed to read SOPS config: {}", e))?;
+pub fn get_age_key_from_1password(context: &GlobalContext) -> Result<String, String> {
+    let op_reference = if let Some(opitem) = &context.opitem {
+        // Use the opitem from command line
+        opitem.clone()
+    } else {
+        // Read the SOPS config to get the 1Password reference
+        let config = read_or_create_config(context)
+            .map_err(|e| format!("Failed to read SOPS config: {}", e))?;
 
-    // Check if onepassworditem is set
-    if config.onepassworditem.is_empty() {
-        return Err(
-            "No 1Password reference found in .sops.yaml. Run 'opsops init' to configure."
-                .to_string(),
-        );
-    }
+        // Check if onepassworditem is set
+        if config.onepassworditem.is_empty() {
+            return Err(
+                "No 1Password reference found in .sops.yaml and none provided via --opitem. Run 'opsops init' to configure."
+                    .to_string(),
+            );
+        }
 
-    // Extract the 1Password reference
-    let op_reference = config.onepassworditem;
+        config.onepassworditem
+    };
+
     // print_info(format!(
     //     "{} {}",
     //     "🔑 Retrieving Age key from".dimmed(),
@@ -35,7 +43,7 @@ pub fn get_age_key_from_1password() -> Result<String, String> {
     // Format: op://<vault>/<item>/<field>
     let output = Command::new("op")
         .arg("read")
-        .arg(op_reference)
+        .arg(&op_reference)
         .output()
         .map_err(|e| format!("Failed to execute 1Password CLI: {}", e))?;
 

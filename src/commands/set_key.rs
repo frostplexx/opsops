@@ -1,3 +1,4 @@
+use crate::GlobalContext;
 use crate::util::op_key::extract_public_key;
 use crate::util::print_status::{print_error, print_success};
 use crate::util::{op_key, sops_config};
@@ -7,7 +8,7 @@ use std::ffi::OsString;
 use std::path::Path;
 
 // Set encryption patterns for a file in .sops.yaml
-pub fn set_keys(path: OsString) {
+pub fn set_keys(path: OsString, context: &GlobalContext) {
     let path_str = path.to_string_lossy().to_string();
     let file_path = Path::new(&path_str);
 
@@ -42,7 +43,7 @@ pub fn set_keys(path: OsString) {
     }
 
     // Ensure we have the key from 1Password
-    match op_key::get_age_key_from_1password() {
+    match op_key::get_age_key_from_1password(context) {
         Ok(key) => {
             // Extract public key from the private key
             let pubkey = match extract_public_key(&key) {
@@ -74,7 +75,7 @@ pub fn set_keys(path: OsString) {
             };
 
             // Update the SOPS configuration
-            match update_sops_config(&file_name, &pubkey, &encrypted_regex) {
+            match update_sops_config(&file_name, &pubkey, &encrypted_regex, context) {
                 Ok(_) => {
                     print_success(format!("{}", "Successfully updated .sops.yaml\n".green()));
                 }
@@ -131,9 +132,14 @@ fn prompt_for_encryption_pattern() -> std::io::Result<String> {
 
 // Update the SOPS configuration with the new encryption pattern
 // TODO: Move this somehwere better
-fn update_sops_config(file_name: &str, pubkey: &str, encrypted_regex: &str) -> std::io::Result<()> {
+fn update_sops_config(
+    file_name: &str,
+    pubkey: &str,
+    encrypted_regex: &str,
+    context: &GlobalContext,
+) -> std::io::Result<()> {
     // Read the current SOPS configuration
-    let mut config = match sops_config::read_or_create_config() {
+    let mut config = match sops_config::read_or_create_config(context) {
         Ok(cfg) => cfg,
         Err(e) => {
             print_error(format!(
@@ -176,7 +182,7 @@ fn update_sops_config(file_name: &str, pubkey: &str, encrypted_regex: &str) -> s
     }
 
     // Write the updated configuration
-    if let Err(e) = sops_config::write_config(&config) {
+    if let Err(e) = sops_config::write_config(&config, context) {
         print_error(format!(
             "{} {}",
             "Error:".red().bold(),

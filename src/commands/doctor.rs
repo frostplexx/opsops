@@ -1,12 +1,15 @@
-use crate::util::{
-    op_key::{extract_public_key, get_age_key_from_1password},
-    print_status::{print_error, print_info, print_success, print_warning},
-    sops_config::read_or_create_config,
+use crate::{
+    GlobalContext,
+    util::{
+        op_key::{extract_public_key, get_age_key_from_1password},
+        print_status::{print_error, print_info, print_success, print_warning},
+        sops_config::read_or_create_config,
+    },
 };
 use colored::Colorize;
 
-pub fn doctor() {
-    let config = match read_or_create_config() {
+pub fn doctor(context: &GlobalContext) {
+    let config = match read_or_create_config(context) {
         Ok(c) => c,
         Err(err) => {
             print_error(format!("{} {}", "Error reading sops file: ".red(), err));
@@ -28,7 +31,7 @@ pub fn doctor() {
         ));
     }
 
-    let age = match get_age_key_from_1password() {
+    let age = match get_age_key_from_1password(context) {
         Ok(it) => it,
         Err(err) => {
             print_error(format!("{} {}", "Couldn't get age key:".red(), err));

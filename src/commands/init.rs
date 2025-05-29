@@ -1,3 +1,4 @@
+use crate::GlobalContext;
 use crate::util::op::{get_fields, get_items, get_vaults};
 use crate::util::print_status::{print_error, print_info, print_success, print_warning};
 use crate::util::sops_config::{get_sops_config, read_or_create_config, write_config};
@@ -8,8 +9,8 @@ use dialoguer::{FuzzySelect, theme::ColorfulTheme};
 use serde_yaml::from_str;
 use std::io::Read;
 
-pub fn init() {
-    match get_sops_config() {
+pub fn init(context: &GlobalContext) {
+    match get_sops_config(context) {
         Some(mut file) => {
             let mut contents = String::new();
             if let Err(e) = file.read_to_string(&mut contents) {
@@ -23,7 +24,7 @@ pub fn init() {
                     "{}",
                     "⚠️  .sops.yaml exists but is missing onepassworditem field.".yellow()
                 ));
-                assign_op_item();
+                assign_op_item(context);
                 return;
             }
 
@@ -61,13 +62,13 @@ pub fn init() {
                     onepassworditem: String::new(),
                 };
 
-                if let Err(e) = write_config(&config) {
+                if let Err(e) = write_config(&config, context) {
                     print_error(format!("{} {}", "Failed to create config file:".red(), e));
                     return;
                 }
 
                 print_success(format!("{}", "Created basic .sops.yaml file.".green()));
-                assign_op_item();
+                assign_op_item(context);
             } else {
                 print_info(format!("{}", "Please create a .sops.yaml file manually following the guide at: https://github.com/getsops/sops#using-sops-yaml-conf-to-select-kms-pgp-and-age-for-new-files".yellow()));
             }
@@ -75,7 +76,7 @@ pub fn init() {
     }
 }
 
-fn assign_op_item() {
+fn assign_op_item(context: &GlobalContext) {
     if Confirm::with_theme(&ColorfulTheme::default())
         .with_prompt("Would you like to assign an age key from 1Password?")
         .default(true)
@@ -148,7 +149,7 @@ fn assign_op_item() {
         ));
 
         // Read the existing config
-        let mut config = match read_or_create_config() {
+        let mut config = match read_or_create_config(context) {
             Ok(cfg) => cfg,
             Err(e) => {
                 print_error(format!("Failed to read or create config: {}", e));
@@ -160,7 +161,7 @@ fn assign_op_item() {
         config.onepassworditem = reference;
 
         // Write the updated config back to disk
-        if let Err(e) = write_config(&config) {
+        if let Err(e) = write_config(&config, context) {
             print_error(format!("Failed to write config: {}", e));
             return;
         }

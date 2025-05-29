@@ -1,19 +1,27 @@
-use crate::util::op_key::get_age_key_from_1password;
+use crate::{GlobalContext, util::op_key::get_age_key_from_1password};
 use std::process::{Child, Command, Stdio};
 
 /// A helper type for executing SOPS commands with the Age key from 1Password
-pub struct SopsCommandBuilder {
+pub struct SopsCommandBuilder<'a> {
     command: Command,
     has_age_key: bool,
+    context: &'a GlobalContext,
 }
 
-impl SopsCommandBuilder {
+impl<'a> SopsCommandBuilder<'a> {
     /// Create a new SopsCommandBuilder initialized with the sops binary
-    pub fn new() -> Self {
-        let command = Command::new("sops");
+    pub fn new(context: &'a GlobalContext) -> Self {
+        let mut command = Command::new("sops");
+
+        // If a custom sops file is specified, add the --config flag
+        if let Some(sops_file) = &context.sops_file {
+            command.arg("--config").arg(sops_file);
+        }
+
         SopsCommandBuilder {
             command,
             has_age_key: false,
+            context,
         }
     }
 
@@ -42,7 +50,7 @@ impl SopsCommandBuilder {
     /// Configure with Age key from 1Password (if it exists)
     pub fn with_age_key(mut self) -> Result<Self, String> {
         // Retrieve the Age key from 1Password
-        let age_key = get_age_key_from_1password()?;
+        let age_key = get_age_key_from_1password(self.context)?;
         self.command.env("SOPS_AGE_KEY", age_key);
         self.has_age_key = true;
         Ok(self)
@@ -50,7 +58,7 @@ impl SopsCommandBuilder {
 
     /// Try to set the Age key, but don't fail if it's not available
     pub fn with_optional_age_key(mut self) -> Self {
-        if let Ok(age_key) = get_age_key_from_1password() {
+        if let Ok(age_key) = get_age_key_from_1password(self.context) {
             self.command.env("SOPS_AGE_KEY", age_key);
             self.has_age_key = true;
         }

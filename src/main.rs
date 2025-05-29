@@ -14,6 +14,18 @@ use util::print_status::print_info;
 #[command(name = "opsops")]
 #[command(version, about = "A wrapper that integrates sops with 1Password", long_about = None)]
 struct Cli {
+    /// Path to the .sops.yaml file
+    #[arg(long, global = true, help = "Path to the .sops.yaml file")]
+    sops_file: Option<String>,
+
+    /// 1Password item reference e.g., op://Personal/test/Private Key
+    #[arg(
+        long,
+        global = true,
+        help = "1Password item reference (e.g. op://MyVault/MyItem/MyField)"
+    )]
+    op_item: Option<String>,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -81,6 +93,12 @@ enum Commands {
     },
 }
 
+/// Global context passed to all commands
+pub struct GlobalContext {
+    pub sops_file: Option<String>,
+    pub opitem: Option<String>,
+}
+
 impl Cli {
     /// Generate man pages and shell completions
     fn generate_docs(output_dir: &str) -> io::Result<()> {
@@ -130,17 +148,22 @@ impl Cli {
 fn main() -> io::Result<()> {
     let args = Cli::parse();
 
+    let context = GlobalContext {
+        sops_file: args.sops_file,
+        opitem: args.op_item,
+    };
+
     match args.command {
-        Commands::ListConfig {} => commands::list_config::list_config(),
-        Commands::GenerateAgeKey {} => commands::generate_age_key::generate_age_key(),
-        Commands::Edit { path } => commands::edit::edit(path),
-        Commands::Encrypt { path } => commands::encrypt::encrypt(path),
-        Commands::Decrypt { path } => commands::decrypt::decrypt(path),
-        Commands::Init {} => commands::init::init(),
-        Commands::Doctor {} => commands::doctor::doctor(),
-        Commands::TargetKeys { path } => commands::set_key::set_keys(path),
+        Commands::ListConfig {} => commands::list_config::list_config(&context),
+        Commands::GenerateAgeKey {} => commands::generate_age_key::generate_age_key(&context),
+        Commands::Edit { path } => commands::edit::edit(path, &context),
+        Commands::Encrypt { path } => commands::encrypt::encrypt(path, &context),
+        Commands::Decrypt { path } => commands::decrypt::decrypt(path, &context),
+        Commands::Init {} => commands::init::init(&context),
+        Commands::Doctor {} => commands::doctor::doctor(&context),
+        Commands::TargetKeys { path } => commands::set_key::set_keys(path, &context),
         Commands::GenerateDocs { dir } => Cli::generate_docs(&dir)?,
-        Commands::Read { path } => commands::read::read(path),
+        Commands::Read { path } => commands::read::read(path, &context),
     }
 
     Ok(())

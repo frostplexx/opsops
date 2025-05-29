@@ -2,14 +2,17 @@ use colored::*;
 use serde_yaml::from_str;
 use std::io::Read;
 
-use crate::util::{
-    print_status::{print_error, print_info},
-    sops_config::get_sops_config,
-    sops_structs::SopsConfig,
+use crate::{
+    GlobalContext,
+    util::{
+        print_status::{print_error, print_info},
+        sops_config::get_sops_config,
+        sops_structs::SopsConfig,
+    },
 };
 
-pub fn list_config() {
-    let mut file = match get_sops_config() {
+pub fn list_config(context: &GlobalContext) {
+    let mut file = match get_sops_config(context) {
         Some(f) => f,
         None => {
             print_error(format!(

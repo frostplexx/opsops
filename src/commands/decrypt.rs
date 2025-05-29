@@ -1,3 +1,4 @@
+use crate::GlobalContext;
 use crate::util::print_status::{print_error, print_info, print_success};
 use crate::util::sops_command::SopsCommandBuilder;
 use crate::util::sops_status::is_file_unchanged_status;
@@ -6,7 +7,7 @@ use std::ffi::OsString;
 use std::path::Path;
 
 /// Decrypts a file using SOPS with the Age key from 1Password
-pub fn decrypt(path: OsString) {
+pub fn decrypt(path: OsString, context: &GlobalContext) {
     // Convert the path from OsString to String
     let path_str = match path.into_string() {
         Ok(p) => p,
@@ -47,7 +48,7 @@ pub fn decrypt(path: OsString) {
     );
 
     // Create a SOPS command with the Age key from 1Password
-    let sops_command = match SopsCommandBuilder::new()
+    let sops_command = match SopsCommandBuilder::new(context)
         .arg("--decrypt")
         .arg("--output")
         .arg(&output_path)
