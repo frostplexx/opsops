@@ -8,12 +8,10 @@ pub fn find_project_root() -> Option<PathBuf> {
     let root_indicators = vec![".git", "src", "flake.nix", "package.json", "Cargo.toml"];
 
     // Try to find Git repository root
-    let project_root = Repository::discover(".")
+    Repository::discover(".")
         .ok()
         .and_then(|repo| repo.workdir().map(|p| p.to_path_buf()))
-        .or_else(|| find_root_by_indicators(&root_indicators));
-
-    project_root
+        .or_else(|| find_root_by_indicators(&root_indicators))
 }
 
 /// Fallback method to find root by walking up directories looking for indicators.
