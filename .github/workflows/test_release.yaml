@@ -124,6 +124,10 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -133,6 +137,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
+  
+      - name: Extract version from Cargo.toml
+        id: extract_version
+        run: |
+          VERSION=$(grep -m1 '^version =' Cargo.toml | sed -E 's/version = "(.*)"/\1/')
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - name: Prepare release binaries
         run: |
@@ -280,3 +290,110 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           semantic-release
+
+      - name: Update Homebrew Formula
+        run: |
+          FORMULA_PATH=/tmp/homebrew-tap/Formula/opsops.rb
+          # Clone the Homebrew Tap repository
+          git clone https://github.com/frostplexx/homebrew-tap.git /tmp/homebrew-tap
+          
+          # Navigate into the repository
+          cd /tmp/homebrew-tap
+          # Configure Git for the remote repository
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Fetch the latest changes to ensure we have the most up-to-date branch
+          git fetch origin main
+          
+          # Checkout to the main branch
+          git checkout main
+          
+          # Update version in the formula
+          sed -i "s|^  version \".*\"|  version \"${VERSION#v}\"|" $FORMULA_PATH
+          
+          # Update ARM64 URL and SHA256
+          if [ -n "${{ env.ARM64_SHA256 }}" ]; then
+            ARM64_URL="https://github.com/${{ github.repository }}/releases/download/${{ env.VERSION }}/opsops-macos-aarch64"
+            sed -i '' "/Hardware::CPU.arm/,/sha256/ s|url \".*\"|url \"$ARM64_URL\"|" $FORMULA_PATH
+            sed -i '' "/Hardware::CPU.arm/,/sha256/ s|sha256 \".*\"|sha256 \"${{ env.ARM64_SHA256 }}\"|" $FORMULA_PATH
+          fi
+          
+          # Update x86_64 URL and SHA256
+          if [ -n "${{ env.X86_64_SHA256 }}" ]; then
+            X86_64_URL="https://github.com/${{ github.repository }}/releases/download/${{ env.VERSION }}/opsops-macos-x86_64"
+            sed -i '' "/Hardware::CPU.intel/,/sha256/ s|url \".*\"|url \"$X86_64_URL\"|" $FORMULA_PATH
+            sed -i '' "/Hardware::CPU.intel/,/sha256/ s|sha256 \".*\"|sha256 \"${{ env.X86_64_SHA256 }}\"|" $FORMULA_PATH
+          fi
+          
+          # Stage the changes
+          git add $FORMULA_PATH
+          git config --global credential.helper store
+          echo "https://x-access-token:${{ secrets.RELEASE_TOKEN }}@github.com" > ~/.git-credentials
+          
+          # Only commit and push if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "Update formula for version ${{ env.VERSION }}"
+            
+            # Push using the token for authentication
+            git push https://github.com/frostplexx/homebrew-tap.git HEAD:main
+          else
+            echo "No changes to commit."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          VERSION: ${{ env.VERSION }}
+
+      - name: Update NixKit Module
+        run: |
+          set -euo pipefail
+      
+          NIXKIT_PATH=/tmp/nixkit
+          NIX_MODULE_PATH=$NIXKIT_PATH/modules/shared/opsops/default.nix
+      
+          # Clone the NixKit repository
+          git clone https://github.com/frostplexx/nixkit.git $NIXKIT_PATH
+      
+          # Navigate into the repository
+          cd $NIXKIT_PATH
+      
+          # Configure Git
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git fetch origin main
+          git checkout main
+      
+          # Ensure the target file exists before modifying
+          if [ ! -f "$NIX_MODULE_PATH" ]; then
+            echo "ERROR: $NIX_MODULE_PATH not found!"
+            exit 1
+          fi
+      
+          # Strip 'v' prefix from VERSION
+          VERSION_STRIPPED="${VERSION#v}"
+      
+          # Update the version line
+          sed -i "s|version = \".*\";|version = \"${VERSION_STRIPPED}\";|" "$NIX_MODULE_PATH"
+
+          # Update the cargo hash if provided
+          sudo apt-get install jq -y
+      
+          # Update the src hash if provided
+          SRC_HASH=$(nix-shell -p nix-prefetch-git jq --run "nix hash to-sri sha256:\$(nix-prefetch-git --url https://github.com/frostplexx/opsops --quiet --rev v\"${VERSION}\" | jq -r '.sha256')")
+          sed -i "s|sha256 = \".*\";|sha256 = \"${SRC_HASH}\";|" "$NIX_MODULE_PATH"
+    
+      
+          # Commit and push changes if any
+          git add "$NIX_MODULE_PATH"
+          git config --global credential.helper store
+          echo "https://x-access-token:${{ secrets.RELEASE_TOKEN }}@github.com" > ~/.git-credentials
+      
+          if ! git diff --cached --quiet; then
+            git commit -m "Update opsops module for version $VERSION"
+            git push https://github.com/frostplexx/nixkit.git HEAD:main
+          else
+            echo "No changes to commit."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          VERSION: ${{ env.VERSION }}
