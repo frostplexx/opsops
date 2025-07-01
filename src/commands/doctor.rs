@@ -2,13 +2,62 @@ use crate::{
     GlobalContext,
     util::{
         op_key::{extract_public_key, get_age_key_from_1password},
-        print_status::{print_error, print_info, print_success, print_warning},
+        print_status::{print_error, print_success, print_warning},
         sops_config::read_or_create_config,
     },
 };
 use colored::Colorize;
 
 pub fn doctor(context: &GlobalContext) {
+    match which::which("sops") {
+        Ok(path) => {
+            let version = std::process::Command::new(&path)
+                .arg("--version")
+                .output()
+                .ok()
+                .and_then(|o| String::from_utf8(o.stdout).ok())
+                .map(|out| out.lines().next().unwrap_or("unknown").to_string())
+                .unwrap_or_else(|| "unknown".to_string());
+            print_success(format!(
+                "{} {} {}",
+                "Found sops:".green(),
+                path.display(),
+                version.trim().dimmed()
+            ));
+        }
+        Err(_) => {
+            print_error(format!(
+                "{}",
+                "sops is not installed or not found in PATH. Please install sops.".red()
+            ));
+            return;
+        }
+    }
+    match which::which("op") {
+        Ok(path) => {
+            let version = std::process::Command::new(&path)
+                .arg("--version")
+                .output()
+                .ok()
+                .and_then(|o| String::from_utf8(o.stdout).ok())
+                .unwrap_or_else(|| "unknown".to_string());
+            print_success(format!(
+                "{} {} {}",
+                "Found 1Password CLI (op):".green(),
+                path.display(),
+                version.trim().dimmed()
+            ));
+        }
+        Err(_) => {
+            print_error(format!(
+                "{}",
+                "1Password CLI (op) is not installed or not found in PATH. Please install op."
+                    .red()
+            ));
+            return;
+        }
+    }
+
     let config = match read_or_create_config(context) {
         Ok(c) => c,
         Err(err) => {
@@ -24,9 +73,9 @@ pub fn doctor(context: &GlobalContext) {
         ));
         return;
     } else {
-        print_info(format!(
+        print_success(format!(
             "{} {}\n",
-            "1Password reference found in .sops.yaml:".green(),
+            "1P item found in .sops.yaml:".green(),
             config.onepassworditem
         ));
     }
@@ -81,7 +130,7 @@ pub fn doctor(context: &GlobalContext) {
                     if derived_public_key == *key {
                         print_success(format!(
                             "{} {}",
-                            "Found matching public key in key group:".green(),
+                            "Found matching public key in .sops.yaml:".green(),
                             key
                         ));
                         found = true;
