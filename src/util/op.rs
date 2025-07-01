@@ -2,7 +2,7 @@ use serde::Deserialize;
 use std::process::Command;
 use users::os::unix::UserExt;
 
-use crate::util::print_status::{print_info, print_warning};
+use crate::util::print_status::print_warning;
 
 use super::print_status::print_error;
 

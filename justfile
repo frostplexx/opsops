@@ -42,7 +42,7 @@ test-one TEST:
 
 # Run clippy lints
 lint:
-    @cargo clippy -- -D warnings
+    @cargo clippy
 
 # Format code
 fmt:

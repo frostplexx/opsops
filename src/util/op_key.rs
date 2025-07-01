@@ -7,7 +7,7 @@ use age::{
     x25519::Identity,
 };
 use colored::Colorize;
-use std::{process::Command, str::FromStr};
+use std::str::FromStr;
 
 use super::print_status::print_error;
 
