@@ -121,6 +121,10 @@ mod tests {
 
     #[test]
     fn test_builder_runs_valid_command() {
+        if which::which("sops").is_err() {
+            eprintln!("Skipping test_builder_runs_valid_command: 'sops' binary not found in PATH.");
+            return;
+        }
         let context = mock_context(None);
 
         let output = SopsCommandBuilder::new(&context)
@@ -139,6 +143,10 @@ mod tests {
 
     #[test]
     fn test_env_injection() {
+        if which::which("sops").is_err() {
+            eprintln!("Skipping test_env_injection: 'sops' binary not found in PATH.");
+            return;
+        }
         let context = mock_context(Some(
             "AGE-SECRET-KEY-1AM036DUJQ8RTJ84N7JTJECSV6FXFM3DCM9F4VEX4ZPL4M3VDA6FQLVJSUR"
                 .to_string(),
