@@ -75,7 +75,7 @@ pub fn doctor(context: &GlobalContext) {
     } else {
         print_success(format!(
             "{} {}\n",
-            "1P item found in .sops.yaml:".green(),
+            "1Password item found in .sops.yaml:".green(),
             config.onepassworditem
         ));
     }

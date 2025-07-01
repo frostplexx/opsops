@@ -106,7 +106,7 @@ pub fn op_command() -> Command {
                 print_warning("Couldn't get sudo user by name");
             }
         } else {
-            print_warning("Sudo User is empty!");
+            print_warning("Environment variable SUDO_USER is set but empty");
         }
     }
     Command::new("op")
