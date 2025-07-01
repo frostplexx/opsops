@@ -2,7 +2,7 @@ use serde::Deserialize;
 use std::process::Command;
 use users::os::unix::UserExt;
 
-use crate::util::print_status::print_info;
+use crate::util::print_status::{print_info, print_warning};
 
 use super::print_status::print_error;
 
@@ -98,9 +98,15 @@ pub fn op_command() -> Command {
                 // Set HOME to the user's home directory
                 if let Some(home) = user.home_dir().to_str() {
                     cmd.env("HOME", home);
+                } else {
+                    print_warning("Couldn't get home directory of sudo user");
                 }
                 return cmd;
+            } else {
+                print_warning("Couldn't get sudo user by name");
             }
+        } else {
+            print_warning("Sudo User is empty!");
         }
     }
     Command::new("op")
