@@ -1,5 +1,8 @@
 use serde::Deserialize;
 use std::process::Command;
+use users::os::unix::UserExt;
+
+use crate::util::print_status::print_warning;
 
 use super::print_status::print_error;
 
@@ -80,8 +83,37 @@ pub struct OpItem {
     pub(crate) fields: Vec<OpItemField>,
 }
 
+/// Helper to run the `op` CLI as the invoking user if running under sudo.
+pub fn op_command() -> Command {
+    use std::env;
+    use std::os::unix::process::CommandExt;
+
+    if let Ok(sudo_user) = env::var("SUDO_USER") {
+        if !sudo_user.is_empty() {
+            // Get the user's UID and GID
+            if let Some(user) = users::get_user_by_name(&sudo_user) {
+                let mut cmd = Command::new("op");
+                cmd.uid(user.uid());
+                cmd.gid(user.primary_group_id());
+                // Set HOME to the user's home directory
+                if let Some(home) = user.home_dir().to_str() {
+                    cmd.env("HOME", home);
+                } else {
+                    print_warning("Couldn't get home directory of sudo user");
+                }
+                return cmd;
+            } else {
+                print_warning("Couldn't get sudo user by name");
+            }
+        } else {
+            print_warning("Environment variable SUDO_USER is set but empty");
+        }
+    }
+    Command::new("op")
+}
+
 pub fn op_item_create(item: OpItem) {
-    let mut cmd = Command::new("op");
+    let mut cmd = op_command();
 
     cmd.arg("item")
         .arg("create")
@@ -90,7 +122,7 @@ pub fn op_item_create(item: OpItem) {
         .arg("--title")
         .arg(&item.title)
         .arg("--category")
-        .arg(item.category.as_str()); // implement as_str on OpCategory
+        .arg(item.category.as_str());
 
     for field in item.fields {
         let field_str = match (&field.section, &field.field_type) {
@@ -118,7 +150,7 @@ pub fn op_item_create(item: OpItem) {
 }
 
 pub fn _op_item_get(item_name: &str, field: &str) -> Option<String> {
-    let output = Command::new("op")
+    let output = op_command()
         .arg("item")
         .arg("get")
         .arg(item_name)
@@ -139,8 +171,7 @@ pub fn _op_item_get(item_name: &str, field: &str) -> Option<String> {
 }
 
 pub fn get_vaults() -> Option<Vec<String>> {
-    // Execute the `op vault list --format=json` command
-    let output_json = Command::new("op")
+    let output_json = op_command()
         .arg("vault")
         .arg("list")
         .arg("--format=json")
@@ -148,7 +179,6 @@ pub fn get_vaults() -> Option<Vec<String>> {
         .ok()?;
 
     if output_json.status.success() {
-        // Parse the JSON response
         let vaults: Vec<Vault> = match serde_json::from_slice(&output_json.stdout) {
             Ok(v) => v,
             Err(e) => {
@@ -157,7 +187,6 @@ pub fn get_vaults() -> Option<Vec<String>> {
             }
         };
 
-        // Extract vault names
         let vault_names: Vec<String> = vaults.into_iter().map(|vault| vault.name).collect();
         Some(vault_names)
     } else {
@@ -170,8 +199,7 @@ pub fn get_vaults() -> Option<Vec<String>> {
 }
 
 pub fn get_items(vault: &String) -> Option<Vec<String>> {
-    // Execute the `op vault list --format=json` command
-    let output_json = Command::new("op")
+    let output_json = op_command()
         .arg("item")
         .arg("list")
         .arg("--vault")
@@ -181,7 +209,6 @@ pub fn get_items(vault: &String) -> Option<Vec<String>> {
         .ok()?;
 
     if output_json.status.success() {
-        // Parse the JSON response
         let vaults: Vec<ListItem> = match serde_json::from_slice(&output_json.stdout) {
             Ok(v) => v,
             Err(e) => {
@@ -190,7 +217,6 @@ pub fn get_items(vault: &String) -> Option<Vec<String>> {
             }
         };
 
-        // Extract vault names
         let item_names: Vec<String> = vaults.into_iter().map(|item| item.title).collect();
         Some(item_names)
     } else {
@@ -203,8 +229,7 @@ pub fn get_items(vault: &String) -> Option<Vec<String>> {
 }
 
 pub fn get_fields(item: &String, vault: &String) -> Option<Vec<String>> {
-    // Execute the `op vault list --format=json` command
-    let output_json = Command::new("op")
+    let output_json = op_command()
         .arg("item")
         .arg("get")
         .arg(item)
@@ -215,7 +240,6 @@ pub fn get_fields(item: &String, vault: &String) -> Option<Vec<String>> {
         .ok()?;
 
     if output_json.status.success() {
-        // Parse the JSON response
         let fields: ItemFields = match serde_json::from_slice(&output_json.stdout) {
             Ok(v) => v,
             Err(e) => {
@@ -224,7 +248,6 @@ pub fn get_fields(item: &String, vault: &String) -> Option<Vec<String>> {
             }
         };
 
-        // Extract vault names
         let item_names: Vec<String> = fields.fields.into_iter().map(|item| item.label).collect();
         Some(item_names)
     } else {

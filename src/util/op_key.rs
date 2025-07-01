@@ -1,10 +1,13 @@
-use crate::{GlobalContext, util::sops_config::read_or_create_config};
+use crate::{
+    GlobalContext,
+    util::{op::op_command, sops_config::read_or_create_config},
+};
 use age::{
     secrecy::{ExposeSecret, SecretString},
     x25519::Identity,
 };
 use colored::Colorize;
-use std::{process::Command, str::FromStr};
+use std::str::FromStr;
 
 use super::print_status::print_error;
 
@@ -30,15 +33,9 @@ pub fn get_age_key_from_1password(context: &GlobalContext) -> Result<String, Str
         config.onepassworditem
     };
 
-    // print_info(format!(
-    //     "{} {}",
-    //     "🔑 Retrieving Age key from".dimmed(),
-    //     op_reference.dimmed()
-    // ));
-
     // Run the op command to get the key
     // Format: op://<vault>/<item>/<field>
-    let output = Command::new("op")
+    let output = op_command()
         .arg("read")
         .arg(&op_reference)
         .output()
