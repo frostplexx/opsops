@@ -75,7 +75,7 @@ jobs:
         run: cargo build --release
 
       - name: Upload Linux ${{ matrix.arch }} binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: opsops-linux-${{ matrix.arch }}
           path: ${{ matrix.path }}
@@ -115,7 +115,7 @@ jobs:
             cargo build --release --target ${{ matrix.target }}
           fi
       - name: Upload macOS ${{ matrix.arch }} binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: opsops-macos-${{ matrix.arch }}
           path: ${{ matrix.path }}
@@ -136,7 +136,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: ./artifacts
   
