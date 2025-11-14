@@ -1,6 +1,6 @@
 [package]
 name = "opsops"
-version = "1.3.2"
+version = "1.3.4"
 edition = "2024"
 
 [dependencies]
