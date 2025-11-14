@@ -25,7 +25,7 @@ pub fn get_age_key_from_1password(context: &GlobalContext) -> Result<String, Str
         // Check if onepassworditem is set
         if config.onepassworditem.is_empty() {
             return Err(
-                "No 1Password reference found in .sops.yaml and none provided via --opitem. Run 'opsops init' to configure."
+                "No 1Password reference found in .sops.yaml and none provided via --op-item. Run 'opsops init' to configure."
                     .to_string(),
             );
         }
