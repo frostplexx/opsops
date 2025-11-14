@@ -38,11 +38,16 @@ pub fn generate_age_key(_context: &GlobalContext) {
         .interact()
         .unwrap()
     {
+        let vault = Input::with_theme(&ColorfulTheme::default())
+            .with_prompt("Choose a 1Password vault to store the item")
+            .default("Personal".to_string())
+            .interact_text()
+            .unwrap();
         let name = Input::with_theme(&ColorfulTheme::default())
             .with_prompt("Choose a name for the 1Password item")
             .interact_text()
             .unwrap();
-        save_to_op(&key, name);
+        save_to_op(&key, name, vault);
     } else {
         println!(
             "{}",
@@ -56,9 +61,9 @@ pub fn generate_age_key(_context: &GlobalContext) {
     ));
 }
 
-fn save_to_op(key: &x25519::Identity, item_name: String) {
+fn save_to_op(key: &x25519::Identity, item_name: String, vault: String) {
     let item = OpItem {
-        vault: "Personal".to_string(),
+        vault: vault.to_string(),
         title: item_name.to_string(),
         category: OpCategory::Password,
         fields: vec![
