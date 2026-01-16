@@ -35,6 +35,7 @@ enum Commands {
     #[command(arg_required_else_help = false)]
     ListConfig {},
 
+
     /// Generate an age key pair
     #[command(arg_required_else_help = false)]
     GenerateAgeKey {},

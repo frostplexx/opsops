@@ -11,6 +11,9 @@ use std::str::FromStr;
 
 use super::print_status::print_error;
 
+
+
+
 /// Retrieves the Age key from 1Password using the reference stored in .sops.yaml or from command line
 /// Returns the key as a string if successful, or an error message if not
 pub fn get_age_key_from_1password(context: &GlobalContext) -> Result<String, String> {
