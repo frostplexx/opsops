@@ -1,12 +1,12 @@
 {pkgs ? import <nixpkgs> {}}:
 pkgs.mkShell {
-  # Get dependencies from the main package
-  inputsFrom = [(pkgs.callPackage ./default.nix {})];
-  # Additional tooling
-  buildInputs = with pkgs; [
-    rust-analyzer # LSP Server
-    rustfmt # Formatter
-    clippy # Linter
+  # get dependencies from the main package
+  inputsfrom = [(pkgs.callpackage ./default.nix {})];
+  # additional tooling
+  buildinputs = with pkgs; [
+    rust-analyzer # lsp server
+    rustfmt # formatter
+    clippy # linter
     openssl
     pkg-config
     cargo-deny
