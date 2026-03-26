@@ -1,7 +1,7 @@
 {pkgs ? import <nixpkgs> {}}:
 pkgs.mkShell {
   # get dependencies from the main package
-  inputsfrom = [(pkgs.callpackage ./default.nix {})];
+  inputsfrom = [(pkgs.callPackage ./default.nix {})];
   # additional tooling
   buildinputs = with pkgs; [
     rust-analyzer # lsp server
