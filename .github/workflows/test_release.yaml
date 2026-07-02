@@ -24,7 +24,7 @@ jobs:
         with:
           components: clippy, rustfmt
       - name: Setup sops
-        uses: nhedger/setup-sops@v2
+        uses: nhedger/setup-sops@v3
 
       - name: Install just
         uses: taiki-e/install-action@v2
