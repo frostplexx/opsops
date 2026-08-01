@@ -155,7 +155,7 @@ jobs:
           cp ./artifacts/opsops-macos-aarch64/opsops release-binaries/opsops-macos-aarch64
           chmod +x release-binaries/*
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "lts/*"
 
