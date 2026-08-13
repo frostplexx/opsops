@@ -1,10 +1,14 @@
-{pkgs ? import <nixpkgs> {}, fenix, system}: let
+{
+  pkgs ? import <nixpkgs> {},
+  fenix,
+  system,
+}: let
   manifest = (pkgs.lib.importTOML ./Cargo.toml).package;
-  overrides = (builtins.fromTOML (builtins.readFile ./rust-toolchain.toml));
+  overrides = builtins.fromTOML (builtins.readFile ./rust-toolchain.toml);
 in
   (pkgs.makeRustPlatform {
-          inherit (fenix.packages.${system}.minimal) cargo rustc;
-        }).buildRustPackage rec {
+    inherit (fenix.packages.${system}.minimal) cargo rustc;
+  }).buildRustPackage rec {
     pname = manifest.name;
     version = manifest.version;
     cargoLock.lockFile = ./Cargo.lock;
